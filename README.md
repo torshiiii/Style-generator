@@ -16,11 +16,26 @@ An outfit generator that only uses clothes you actually own.
    **Swap** changes just that one piece.
 4. Tap **Save this outfit** to keep a combo in the **Saved** tab.
 
+### Today's weather
+On **Get dressed**, type your city (or tap **Use my location**). The app checks today's
+forecast (free, from Open-Meteo) and picks clothes for hot, mild or cold weather, and adds a
+jacket when rain is likely. Tap **°F / °C** to switch units.
+
+Automatic weather works when you open `index.html` in a browser. Inside the Claude link it's
+blocked, so you pick the weather yourself there.
+
 ### How outfits are picked
-- Either a dress/jumpsuit, or a top + bottoms, plus shoes.
-- A jacket or coat is always added when it's cold, sometimes when it's mild, never when it's hot.
-- Neutral colors (black, white, gray, navy, beige, brown, denim, olive) go with anything.
-  Each outfit uses at most one "statement" color or pattern, so things don't clash.
+Outfits are laid out like a flat-lay photo: top, pants and shoes down the middle, belt and
+watch on one side, sweater and jacket on the other. Each gets a name like
+"Casual 1 — Cream and navy".
+
+- Either a dress/jumpsuit, or a top + bottoms, plus shoes. A belt goes with pants and shorts.
+- Light tops go with dark bottoms (and the other way around).
+- The belt matches the shoes (brown with brown, black with black).
+- A second color, like a navy collar on a gray polo, gets echoed by another piece.
+- Neutrals (black, white, cream, beige, tan, brown, gray, navy, denim, light blue, olive) go
+  with anything. Each outfit uses at most one bright color or pattern.
+- A sweater is added sometimes when it's mild or cold; a coat always when it's cold.
 
 ### Where your closet is stored
 When you open the file yourself, your clothes are saved in that browser on that device.

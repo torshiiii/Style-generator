@@ -21,7 +21,9 @@
     --accent: #B8325F;
     --accent-soft: #F6DCE6;
     --on-accent: #FFFFFF;
-    --good: #2D7A55;
+    --board: #FFFFFF;
+    --board-ink: #55585F;
+    --sky: #E3ECF7;
     --shadow: 0 1px 2px rgba(26,29,38,.06), 0 6px 18px rgba(26,29,38,.07);
     --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
     --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -31,18 +33,21 @@
     :root:not([data-theme="light"]) {
       color-scheme: dark;
       --bg: #121419; --surface: #1C1F27; --sunken: #262A34; --ink: #ECEEF3; --muted: #A2A8B7;
-      --line: #313644; --accent: #E6739A; --accent-soft: #3D1F2B; --on-accent: #1B0A11; --good: #6CC79A;
+      --line: #313644; --accent: #E6739A; --accent-soft: #3D1F2B; --on-accent: #1B0A11;
+      --board: #F2F1EE; --board-ink: #55585F; --sky: #1E2A3A;
       --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
     --bg: #121419; --surface: #1C1F27; --sunken: #262A34; --ink: #ECEEF3; --muted: #A2A8B7;
-    --line: #313644; --accent: #E6739A; --accent-soft: #3D1F2B; --on-accent: #1B0A11; --good: #6CC79A;
+    --line: #313644; --accent: #E6739A; --accent-soft: #3D1F2B; --on-accent: #1B0A11;
+    --board: #F2F1EE; --board-ink: #55585F; --sky: #1E2A3A;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { background: var(--bg); }
   body {
     margin: 0; color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5;
@@ -56,10 +61,7 @@
   .mono { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
 
   /* Header + tabs */
-  header.top {
-    display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px;
-    padding-block: 28px 16px;
-  }
+  header.top { padding-block: 28px 16px; }
   .brand h1 { font-size: clamp(30px, 6vw, 44px); font-weight: 800; letter-spacing: -.02em; }
   .brand h1 span { color: var(--accent); }
   .brand p { margin: 4px 0 0; color: var(--muted); }
@@ -68,30 +70,44 @@
     position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-bottom: 20px; width: fit-content; max-width: 100%;
   }
   nav.tabs button {
-    border: 0; background: transparent; padding: 8px 16px; border-radius: 999px; font-weight: 700; color: var(--muted);
-    white-space: nowrap;
+    border: 0; background: transparent; padding: 8px 16px; border-radius: 999px; font-weight: 700; color: var(--muted); white-space: nowrap;
   }
   nav.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
   nav.tabs .count { font-family: var(--mono); font-size: 12px; margin-left: 4px; opacity: .7; }
 
-  /* Banner for example data */
   .banner {
     display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
     background: var(--accent-soft); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;
   }
   .banner p { margin: 0; }
 
+  /* Weather */
+  .weather { background: var(--sky); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; display: grid; gap: 10px; }
+  .wx-now { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+  .wx-temp { font-family: var(--display); font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .wx-detail { display: grid; gap: 2px; }
+  .wx-detail strong { font-size: 17px; }
+  .wx-detail span { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .wx-pill {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    background: var(--ink); color: var(--bg); padding: 4px 10px; border-radius: 999px;
+  }
+  .wx-tools { display: flex; gap: 6px; margin-left: auto; }
+  form.wx-form { display: flex; flex-wrap: wrap; gap: 8px; }
+  form.wx-form input {
+    flex: 1 1 180px; min-width: 0; border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 12px;
+  }
+  .wx-msg { margin: 0; color: var(--muted); font-size: 14px; }
+
   /* Filters */
   .filters { display: grid; gap: 14px; margin-bottom: 20px; }
   .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .filter-row > .mono { width: 88px; color: var(--muted); }
   @media (max-width: 520px) { .filter-row > .mono { width: 100%; } }
-  .chip {
-    border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-weight: 700;
-  }
+  .chip { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-weight: 700; }
   .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 
-  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
   .btn {
     border: 0; border-radius: 12px; padding: 12px 20px; font-weight: 700; background: var(--sunken);
     display: inline-flex; align-items: center; gap: 8px;
@@ -100,57 +116,81 @@
   .btn.primary:active { transform: translateY(1px); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
   .btn.small { padding: 7px 12px; border-radius: 9px; font-size: 14px; }
+  .btn.ghost { background: transparent; padding-inline: 8px; text-decoration: underline; text-underline-offset: 3px; }
   .btn.danger { color: var(--accent); }
 
-  /* Outfit hang tags */
-  .outfit { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
-  .tag {
-    position: relative; background: var(--surface); border-radius: 14px 14px 12px 12px; box-shadow: var(--shadow);
-    padding: 26px 14px 14px; display: grid; gap: 8px; align-content: start;
+  /* Flat-lay board */
+  .board { background: var(--board); border-radius: 16px; padding: 18px 10px 26px; box-shadow: var(--shadow); }
+  .board-title { text-align: center; font-family: var(--body); font-weight: 400; color: var(--board-ink); font-size: clamp(16px, 3.8vw, 21px); margin: 0 0 16px; }
+  .lay { display: grid; grid-template-columns: 1fr 1.7fr 1fr; gap: 6px; align-items: center; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .col.mid { gap: 0; }
+  .pc { display: block; width: 100%; }
+  .pc svg, .pc img { display: block; width: 100%; height: auto; }
+  .pc img { mix-blend-mode: multiply; object-fit: contain; max-height: 260px; border-radius: 4px; }
+  .mid .pc-top { width: 94%; position: relative; z-index: 2; margin-bottom: -5%; }
+  .mid .pc-bottom { width: 58%; position: relative; z-index: 1; }
+  .mid .pc-bottom.wide { width: 74%; }
+  .mid .pc-dress { width: 66%; }
+  .mid .pc-shoes { width: 56%; margin-top: 9%; }
+  .side .pc-belt { width: 76%; }
+  .side .pc-accessory { width: 58%; }
+  .side .pc-layer { width: 100%; }
+  .side .pc-outer { width: 100%; }
+  .left .pc-belt { transform: rotate(-8deg); }
+  .board.mini { padding: 12px 6px 16px; box-shadow: none; border: 1px solid var(--line); }
+  .board.mini .board-title { font-size: 14px; margin-bottom: 10px; }
+  .board.mini .col { gap: 8px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .board.fresh .pc { animation: settle .45s cubic-bezier(.2,.8,.3,1) both; }
+    .board.fresh .mid .pc:nth-child(2) { animation-delay: .05s; }
+    .board.fresh .mid .pc:nth-child(3) { animation-delay: .1s; }
+    .board.fresh .side .pc { animation-delay: .14s; }
+    @keyframes settle { from { opacity: .3; transform: translateY(-10px) scale(.98); } }
   }
-  .tag::before { /* punched hole */
-    content: ""; position: absolute; top: 9px; left: 50%; width: 10px; height: 10px; margin-left: -5px;
-    border-radius: 50%; background: var(--bg); box-shadow: inset 0 1px 2px rgba(0,0,0,.2);
+
+  /* Piece list under the board */
+  .pieces { display: grid; gap: 8px; margin-top: 14px; }
+  .piece {
+    display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    background: var(--surface); border-radius: 12px; padding: 8px 10px; box-shadow: var(--shadow);
   }
-  .tag .slot { color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
-  .tag.locked { outline: 2px solid var(--accent); }
-  .thumb {
-    aspect-ratio: 1; max-width: 100%; border-radius: 10px; background: var(--sunken); display: grid; place-items: center; overflow: hidden;
-  }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .thumb svg { width: 72%; height: 72%; }
-  .tag h3 { font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
-  .tag .meta { color: var(--muted); font-size: 11px; }
-  .tag .row { display: flex; gap: 6px; }
-  .tag .row .btn { flex: 1; justify-content: center; }
+  .piece.locked { outline: 2px solid var(--accent); }
+  .piece .who { display: grid; }
+  .piece .who .mono { color: var(--muted); font-size: 11px; }
+  .piece .who b { overflow-wrap: anywhere; }
+  .piece .row { display: flex; gap: 6px; }
   .lock[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
-  .note { color: var(--muted); margin: 16px 0 0; }
+  .thumb {
+    aspect-ratio: 1; width: 100%; max-width: 100%; border-radius: 10px; background: var(--board); display: grid; place-items: center; overflow: hidden;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+  .thumb svg { width: 74%; height: 74%; }
+  .note { color: var(--muted); margin: 14px 0 0; }
   .note strong { color: var(--ink); }
   .empty-state { background: var(--surface); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); }
   .empty-state h3 { font-size: 22px; margin-bottom: 6px; }
   .empty-state p { margin: 0 0 14px; color: var(--muted); max-width: 60ch; }
+  .empty-state p:last-child { margin-bottom: 0; }
 
   /* Closet */
   .closet-layout { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); }
   @media (min-width: 820px) { .closet-layout { grid-template-columns: 340px minmax(0, 1fr); align-items: start; } }
-  form.add {
-    background: var(--surface); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); display: grid; gap: 16px;
-  }
-  @media (min-width: 820px) { form.add { position: sticky; top: 76px; } }
+  form.add { background: var(--surface); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); display: grid; gap: 16px; }
+  @media (min-width: 820px) { form.add { position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow: auto; } }
   form.add h2 { font-size: 24px; }
   .field { display: grid; gap: 6px; }
   .field > label, .field > .mono { color: var(--muted); }
-  .field input[type="text"], .field select {
-    width: 100%; border: 1.5px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px;
-  }
+  .field input[type="text"], .field select { width: 100%; border: 1.5px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; }
   .photo-pick { display: flex; gap: 12px; align-items: center; }
-  .photo-pick .thumb { width: 72px; flex: none; }
+  .photo-pick .thumb { width: 84px; flex: none; border: 1px solid var(--line); }
   .photo-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
   .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-  .swatch {
-    width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--line); padding: 0; position: relative;
-  }
-  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); border-color: transparent; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); padding: 0; }
+  .swatch.none { background: var(--surface); position: relative; overflow: hidden; }
+  .swatch.none::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--muted); transform: rotate(45deg); }
+  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); border-color: transparent; }
   .color-name { font-size: 14px; color: var(--muted); }
   .checks { display: flex; flex-wrap: wrap; gap: 8px; }
   .checks label {
@@ -165,19 +205,15 @@
   .cat-group h2 .mono { color: var(--muted); }
   .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
   .item { background: var(--surface); border-radius: 12px; padding: 10px; box-shadow: var(--shadow); display: grid; gap: 6px; align-content: start; }
-  .item h3 { font-size: 15px; font-weight: 600; font-family: var(--body); overflow-wrap: anywhere; }
+  .item h3 { font-size: 15px; font-weight: 700; font-family: var(--body); overflow-wrap: anywhere; }
   .item .meta { color: var(--muted); font-size: 10.5px; }
   .item .row { display: flex; gap: 6px; }
   .item .row .btn { flex: 1; justify-content: center; padding-inline: 6px; }
 
   /* Saved */
-  .saved-list { display: grid; gap: 12px; }
-  .saved {
-    background: var(--surface); border-radius: 14px; padding: 14px; box-shadow: var(--shadow);
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
-  }
-  .saved .minis { display: flex; flex-wrap: wrap; gap: 6px; }
-  .saved .minis .thumb { width: 56px; }
+  .saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .saved { background: var(--surface); border-radius: 16px; padding: 10px; box-shadow: var(--shadow); display: grid; gap: 10px; }
+  .saved .row { display: flex; gap: 6px; justify-content: space-between; align-items: center; }
   .saved .when { color: var(--muted); font-size: 13px; }
 
   .toast {
@@ -185,19 +221,12 @@
     background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-weight: 700;
     max-width: calc(100% - 32px); z-index: 20;
   }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  @media (prefers-reduced-motion: no-preference) {
-    .tag { animation: drop .35s ease-out both; }
-    .tag:nth-child(2) { animation-delay: .04s; } .tag:nth-child(3) { animation-delay: .08s; }
-    .tag:nth-child(4) { animation-delay: .12s; } .tag:nth-child(5) { animation-delay: .16s; }
-    @keyframes drop { from { transform: translateY(-6px) rotate(-1deg); } to { transform: none; } }
-  }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <pattern id="cs-pattern" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <rect width="8" height="8" fill="#e8d9b8"/><rect width="4" height="8" fill="#c7323a"/>
+      <rect width="8" height="8" fill="#E8DDC6"/><rect width="3" height="8" fill="#2E4470"/>
     </pattern>
   </defs>
 </svg>
@@ -223,28 +252,43 @@
 
   <!-- GET DRESSED -->
   <section id="panel-dress" role="tabpanel" aria-labelledby="tab-dress">
+    <div class="weather" id="weather" aria-live="polite">
+      <div class="wx-now" id="wx-now"></div>
+      <form class="wx-form" id="wx-form">
+        <label for="wx-city" class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">City</label>
+        <input type="text" id="wx-city" placeholder="Your city, e.g. Chicago" autocomplete="address-level2">
+        <button class="btn small" type="submit">Get weather</button>
+        <button class="btn small" type="button" id="wx-geo">Use my location</button>
+      </form>
+      <p class="wx-msg" id="wx-msg"></p>
+    </div>
+
     <div class="filters">
       <div class="filter-row" role="group" aria-label="Weather">
         <span class="mono">Weather</span>
-        <button class="chip" data-filter="weather" data-value="any">Any</button>
+        <button class="chip" data-filter="weather" data-value="auto" id="chip-auto" hidden>Today</button>
         <button class="chip" data-filter="weather" data-value="hot">Hot</button>
         <button class="chip" data-filter="weather" data-value="mild">Mild</button>
         <button class="chip" data-filter="weather" data-value="cold">Cold</button>
+        <button class="chip" data-filter="weather" data-value="any">Any</button>
       </div>
       <div class="filter-row" role="group" aria-label="Occasion">
         <span class="mono">Occasion</span>
-        <button class="chip" data-filter="occasion" data-value="any">Any</button>
         <button class="chip" data-filter="occasion" data-value="casual">Casual</button>
         <button class="chip" data-filter="occasion" data-value="work">Work</button>
         <button class="chip" data-filter="occasion" data-value="dressy">Dressy</button>
         <button class="chip" data-filter="occasion" data-value="active">Active</button>
+        <button class="chip" data-filter="occasion" data-value="any">Any</button>
       </div>
     </div>
+
     <div class="actions">
       <button class="btn primary" id="shuffle-btn" data-action="shuffle">Shuffle outfit</button>
       <button class="btn" id="save-btn" data-action="save-outfit">Save this outfit</button>
     </div>
-    <div class="outfit" id="outfit" aria-live="polite"></div>
+
+    <div id="outfit"></div>
+    <div class="pieces" id="pieces"></div>
     <p class="note" id="outfit-note"></p>
   </section>
 
@@ -264,22 +308,29 @@
               <button type="button" class="btn small danger" id="photo-clear" hidden>Remove photo</button>
             </div>
           </div>
+          <p class="hint">Lay the piece flat on a white sheet or bed and shoot from above. It blends right into the outfit board.</p>
         </div>
 
         <div class="field">
-          <label for="f-type">What is it?</label>
-          <select id="f-type"></select>
+          <label for="f-kind">What is it?</label>
+          <select id="f-kind"></select>
         </div>
 
         <div class="field">
           <label for="f-name">Name (optional)</label>
-          <input type="text" id="f-name" maxlength="60" placeholder="e.g. Striped linen shirt" autocomplete="off">
+          <input type="text" id="f-name" maxlength="60" placeholder="e.g. Cream cable-knit polo" autocomplete="off">
         </div>
 
         <div class="field">
           <span class="mono">Main color</span>
           <div class="swatches" id="f-colors" role="group" aria-label="Main color"></div>
           <span class="color-name" id="color-name"></span>
+        </div>
+
+        <div class="field">
+          <span class="mono">Second color (optional)</span>
+          <div class="swatches" id="f-trims" role="group" aria-label="Second color"></div>
+          <span class="color-name" id="trim-name"></span>
         </div>
 
         <div class="field">
@@ -304,7 +355,7 @@
 
   <!-- SAVED -->
   <section id="panel-saved" role="tabpanel" aria-labelledby="tab-saved" hidden>
-    <div class="saved-list" id="saved-list"></div>
+    <div id="saved-list"></div>
   </section>
 </div>
 
@@ -315,76 +366,116 @@
   "use strict";
 
   // ---------- Reference data ----------
-  const CATS = [
-    { id: "top", label: "Top", plural: "Tops" },
-    { id: "bottom", label: "Bottoms", plural: "Bottoms" },
-    { id: "dress", label: "Dress / jumpsuit", plural: "Dresses & jumpsuits" },
-    { id: "outer", label: "Jacket / coat", plural: "Jackets & coats" },
-    { id: "shoes", label: "Shoes", plural: "Shoes" },
-    { id: "accessory", label: "Accessory", plural: "Accessories" }
-  ];
-  const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
-  const SLOT_ORDER = ["outer", "top", "dress", "bottom", "shoes", "accessory"];
-  const COLORS = {
-    black: "#1D1D1F", white: "#F7F7F4", gray: "#9A9CA3", navy: "#23315A", beige: "#D9C7A7",
-    brown: "#7A5234", denim: "#5B7FA6", olive: "#6F7443", red: "#C7323A", pink: "#E79BB5",
-    orange: "#E27A32", yellow: "#ECC94B", green: "#3F8F5A", blue: "#3A6FD8", purple: "#7A4FB0",
-    pattern: "url(#cs-pattern)"
+  // Slots are the places on the outfit board; kinds are what people pick in the form.
+  const SLOTS = {
+    top: "Top", bottom: "Bottoms", dress: "Dress", layer: "Layer", outer: "Jacket",
+    shoes: "Shoes", belt: "Belt", accessory: "Accessory"
   };
-  // Neutrals go with anything; everything else counts as a "statement" color.
-  const NEUTRAL = new Set(["black", "white", "gray", "navy", "beige", "brown", "denim", "olive"]);
+  const SLOT_PLURAL = {
+    top: "Tops", bottom: "Bottoms", dress: "Dresses & jumpsuits", layer: "Sweaters & layers", outer: "Jackets & coats",
+    shoes: "Shoes", belt: "Belts", accessory: "Accessories"
+  };
+  const KINDS = [
+    { id: "tee", label: "T-shirt / top", cat: "top", shape: "tee" },
+    { id: "polo", label: "Polo", cat: "top", shape: "polo" },
+    { id: "shirt", label: "Button-up shirt", cat: "top", shape: "shirt" },
+    { id: "sweater", label: "Sweater / cardigan", cat: "layer", shape: "folded" },
+    { id: "hoodie", label: "Hoodie / sweatshirt", cat: "layer", shape: "folded" },
+    { id: "pants", label: "Pants / chinos", cat: "bottom", shape: "pants" },
+    { id: "jeans", label: "Jeans", cat: "bottom", shape: "pants" },
+    { id: "shorts", label: "Shorts", cat: "bottom", shape: "shorts" },
+    { id: "skirt", label: "Skirt", cat: "bottom", shape: "skirt" },
+    { id: "dress", label: "Dress / jumpsuit", cat: "dress", shape: "dress" },
+    { id: "jacket", label: "Jacket", cat: "outer", shape: "jacket" },
+    { id: "coat", label: "Coat", cat: "outer", shape: "coat" },
+    { id: "sneakers", label: "Sneakers", cat: "shoes", shape: "shoes" },
+    { id: "dressshoes", label: "Loafers / dress shoes / boots", cat: "shoes", shape: "shoes" },
+    { id: "belt", label: "Belt", cat: "belt", shape: "belt" },
+    { id: "watch", label: "Watch / bracelet", cat: "accessory", shape: "watch" },
+    { id: "bag", label: "Bag", cat: "accessory", shape: "bag" },
+    { id: "hat", label: "Hat / cap", cat: "accessory", shape: "cap" }
+  ];
+  const KIND = Object.fromEntries(KINDS.map(k => [k.id, k]));
+  const DEFAULT_KIND = { top: "tee", bottom: "pants", dress: "dress", layer: "sweater", outer: "jacket", shoes: "sneakers", belt: "belt", accessory: "bag" };
+
+  const COLORS = {
+    black: "#1D1D1F", charcoal: "#45474E", gray: "#A4A6AC", white: "#F8F8F5", cream: "#ECE4D2", beige: "#D6C4A2",
+    tan: "#A96C3F", brown: "#6B472E", navy: "#22304F", denim: "#56789C", lightblue: "#AFC8E6", olive: "#6B6E40",
+    green: "#3F8457", burgundy: "#6E2233", red: "#C0343C", pink: "#E6A2B8", orange: "#DE7A36", yellow: "#E9C54E",
+    blue: "#3767C9", purple: "#76509E", pattern: "url(#cs-pattern)"
+  };
+  const COLOR_LABEL = { lightblue: "light blue" };
+  // Neutrals go with anything; everything else counts as a statement color.
+  const NEUTRAL = new Set(["black", "charcoal", "gray", "white", "cream", "beige", "tan", "brown", "navy", "denim", "lightblue", "olive"]);
+  const LIGHTNESS = {
+    black: .05, charcoal: .25, gray: .6, white: 1, cream: .93, beige: .8, tan: .45, brown: .22, navy: .12, denim: .4,
+    lightblue: .8, olive: .35, green: .4, burgundy: .18, red: .4, pink: .78, orange: .55, yellow: .85, blue: .4, purple: .3, pattern: .5
+  };
+  const leather = c => (c === "tan" || c === "brown") ? "brown" : c;
   const WEATHER = [["hot", "Hot"], ["mild", "Mild"], ["cold", "Cold"]];
   const OCCASIONS = [["casual", "Casual"], ["work", "Work"], ["dressy", "Dressy"], ["active", "Active"]];
-  const ICONS = {
-    top: "M16 6 L8 10 L3 20 L10 23 L12 19 L12 42 L36 42 L36 19 L38 23 L45 20 L40 10 L32 6 Q24 12 16 6Z",
-    bottom: "M13 5 H35 L38 43 H28 L24 18 L20 43 H10 Z",
-    dress: "M18 4 H30 L29 14 L39 43 H9 L19 14 Z",
-    outer: "M17 5 L8 9 L5 40 L11 41 L13 22 L13 43 L23 43 L24 14 L25 43 L35 43 L35 22 L37 41 L43 40 L40 9 L31 5 L24 14 Z",
-    shoes: "M5 30 Q5 22 10 20 L17 19 Q20 26 28 27 L40 30 Q44 31 44 35 L44 38 L5 38 Z",
-    accessory: "M10 18 H38 L36 42 H12 Z"
-  };
 
   // Shown only until the user adds their own first piece.
   const SAMPLE = [
-    ["s1", "White tee", "top", "white", ["hot", "mild"], ["casual", "active"]],
-    ["s2", "Navy button-down", "top", "navy", ["mild", "cold"], ["work", "casual"]],
-    ["s3", "Striped knit", "top", "pattern", ["mild", "cold"], ["casual"]],
-    ["s4", "Red silk blouse", "top", "red", ["hot", "mild"], ["work", "dressy"]],
-    ["s5", "Straight-leg jeans", "bottom", "denim", ["mild", "cold"], ["casual"]],
-    ["s6", "Black trousers", "bottom", "black", ["mild", "cold"], ["work", "dressy"]],
-    ["s7", "Beige shorts", "bottom", "beige", ["hot"], ["casual", "active"]],
-    ["s8", "Green midi dress", "dress", "green", ["hot", "mild"], ["dressy", "casual"]],
-    ["s9", "Camel wool coat", "outer", "brown", ["cold"], ["work", "dressy", "casual"]],
-    ["s10", "Denim jacket", "outer", "denim", ["mild"], ["casual"]],
-    ["s11", "White sneakers", "shoes", "white", ["hot", "mild", "cold"], ["casual", "active"]],
-    ["s12", "Black loafers", "shoes", "black", ["mild", "cold"], ["work", "dressy"]],
-    ["s13", "Tan tote", "accessory", "beige", ["hot", "mild", "cold"], ["work", "casual"]]
-  ].map(([id, name, cat, color, weather, occasions]) => ({ id, name, cat, color, weather, occasions, sample: true }));
+    ["s1", "Cream cable-knit polo", "polo", "cream", null, ["hot", "mild"], ["casual", "work"]],
+    ["s2", "Gray polo, navy collar", "polo", "gray", "navy", ["hot", "mild"], ["casual"]],
+    ["s3", "White oxford shirt", "shirt", "white", null, ["mild", "cold"], ["work", "casual", "dressy"]],
+    ["s4", "Light blue shirt", "shirt", "lightblue", null, ["hot", "mild", "cold"], ["work", "dressy"]],
+    ["s5", "Navy V-neck sweater", "sweater", "navy", null, ["mild", "cold"], ["casual", "work"]],
+    ["s6", "Oatmeal crewneck", "sweater", "beige", null, ["mild", "cold"], ["casual"]],
+    ["s7", "Navy chinos", "pants", "navy", null, ["hot", "mild", "cold"], ["casual", "work"]],
+    ["s8", "Cream chinos", "pants", "cream", null, ["hot", "mild"], ["casual", "work"]],
+    ["s9", "Dark jeans", "jeans", "denim", null, ["mild", "cold"], ["casual"]],
+    ["s10", "Olive shorts", "shorts", "olive", null, ["hot"], ["casual", "active"]],
+    ["s11", "Tan leather sneakers", "sneakers", "tan", "cream", ["hot", "mild", "cold"], ["casual"]],
+    ["s12", "White sneakers", "sneakers", "white", null, ["hot", "mild", "cold"], ["casual", "active"]],
+    ["s13", "Dark brown loafers", "dressshoes", "brown", null, ["mild", "cold"], ["work", "dressy"]],
+    ["s14", "Tan leather belt", "belt", "tan", null, ["hot", "mild", "cold"], ["casual", "work", "dressy"]],
+    ["s15", "Dark brown belt", "belt", "brown", null, ["hot", "mild", "cold"], ["work", "dressy", "casual"]],
+    ["s16", "Navy wool coat", "coat", "navy", null, ["cold"], ["work", "dressy", "casual"]],
+    ["s17", "Olive field jacket", "jacket", "olive", null, ["mild", "cold"], ["casual"]],
+    ["s18", "Steel watch", "watch", "gray", null, ["hot", "mild", "cold"], ["casual", "work", "dressy"]]
+  ].map(([id, name, kind, color, trim, weather, occasions]) =>
+    ({ id, name, kind, cat: KIND[kind].cat, color, trim, weather, occasions, sample: true }));
 
   // ---------- State ----------
   const state = {
     items: [],
     outfits: [],
-    filters: { weather: "any", occasion: "any" },
+    filters: { weather: "any", occasion: "casual" },
     current: {},          // slot -> item id
+    title: "",
     locked: new Set(),    // slots kept on shuffle
+    counters: {},
+    fresh: false,
     tab: "dress",
     editingId: null,
     form: blankForm()
   };
 
   function blankForm() {
-    return { cat: "top", name: "", color: "black", weather: ["hot", "mild", "cold"], occasions: ["casual"], photo: null };
+    return { kind: "tee", name: "", color: "black", trim: null, weather: ["hot", "mild", "cold"], occasions: ["casual"], photo: null };
+  }
+  function normalize(it) {
+    const kind = KIND[it.kind] ? it.kind : (DEFAULT_KIND[it.cat] || "tee");
+    return Object.assign({}, it, { kind, cat: KIND[kind].cat, color: COLORS[it.color] ? it.color : "gray",
+      trim: COLORS[it.trim] ? it.trim : null, weather: it.weather || [], occasions: it.occasions || [] });
   }
   const usingSamples = () => state.items.length === 0;
   const closet = () => (usingSamples() ? SAMPLE : state.items);
   const findItem = id => closet().find(i => i.id === id);
   const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const $ = id => document.getElementById(id);
+  const colorName = c => COLOR_LABEL[c] || c;
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
+  const ls = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  };
 
   let toastTimer;
   function toast(msg) {
@@ -396,21 +487,17 @@
 
   // ---------- Storage ----------
   // Inside Claude the closet lives in the artifact's database (follows you across devices).
-  // Opened as a plain file, it lives in this browser's local storage.
+  // Opened as a plain file or website, it lives in this browser's local storage.
   const LS_KEY = "closet-shuffle-v1";
   const store = {
     cloud: null,
     loadLocal() {
-      try {
-        const d = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-        state.items = Array.isArray(d.items) ? d.items : [];
-        state.outfits = Array.isArray(d.outfits) ? d.outfits : [];
-      } catch (e) { /* storage blocked: start empty */ }
+      const d = ls.get(LS_KEY) || {};
+      state.items = Array.isArray(d.items) ? d.items.map(normalize) : [];
+      state.outfits = Array.isArray(d.outfits) ? d.outfits : [];
     },
     saveLocal() {
-      try {
-        localStorage.setItem(LS_KEY, JSON.stringify({ items: state.items, outfits: state.outfits }));
-      } catch (e) {
+      if (!ls.set(LS_KEY, { items: state.items, outfits: state.outfits })) {
         toast("Couldn't save. This browser's storage is full or turned off.");
       }
     },
@@ -434,15 +521,16 @@
     delOutfit(id) { return this.remove("outfits", state.outfits, id); }
   };
 
+  const IN_CLAUDE = !!(window.claude && typeof window.claude.use === "function");
+
   function connectCloud() {
-    const c = window.claude;
-    if (!c || typeof c.use !== "function") return;
-    c.use("db").then(db => {
+    if (!IN_CLAUDE) return;
+    window.claude.use("db").then(db => {
       if (!db) return;
       store.cloud = db;
       const clean = d => Object.assign({}, d.data(), { id: d.id });
       db.collection("closet").onSnapshot(snap => {
-        state.items = snap.docs.map(clean).sort((a, b) => (a.created || 0) - (b.created || 0));
+        state.items = snap.docs.map(d => normalize(clean(d))).sort((a, b) => (a.created || 0) - (b.created || 0));
         const stale = Object.values(state.current).some(id => !findItem(id));
         if (stale || !Object.keys(state.current).length) shuffle();
         renderAll();
@@ -454,24 +542,181 @@
     }).catch(() => {});
   }
 
-  // ---------- Outfit logic ----------
-  const matches = it =>
-    (state.filters.weather === "any" || (it.weather || []).includes(state.filters.weather)) &&
-    (state.filters.occasion === "any" || (it.occasions || []).includes(state.filters.occasion));
-  const poolFor = cat => closet().filter(i => i.cat === cat && matches(i));
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  // ---------- Live weather (Open-Meteo: free, no account needed) ----------
+  const wx = { place: null, data: null, status: "idle", msg: "", editing: false, unit: "C" };
+  (function initUnit() {
+    const saved = ls.get("cs-unit");
+    wx.unit = saved === "F" || saved === "C" ? saved : (/-(US|LR|MM)$/i.test(navigator.language || "") ? "F" : "C");
+  })();
+  const deg = c => Math.round(wx.unit === "F" ? c * 9 / 5 + 32 : c) + "°";
+  const WMO = [[0, "Clear"], [3, "Partly cloudy"], [48, "Foggy"], [57, "Drizzle"], [67, "Rain"], [77, "Snow"], [82, "Showers"], [86, "Snow showers"], [99, "Thunderstorms"]];
+  const describe = code => (WMO.find(([max]) => code <= max) || [0, "—"])[1];
+  const WET = code => (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
 
-  // A combo works when it has at most one statement color or pattern among the clothes.
-  function clashes(pieces) {
-    const main = pieces.filter(p => p && p.cat !== "shoes" && p.cat !== "accessory");
-    const bold = new Set(main.filter(p => !NEUTRAL.has(p.color)).map(p => p.color));
-    return bold.size > 1 || main.filter(p => p.color === "pattern").length > 1;
+  async function getJSON(url) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 9000);
+    try {
+      const r = await fetch(url, { signal: ac.signal });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return await r.json();
+    } finally { clearTimeout(timer); }
   }
 
-  function chance(slot) {
+  const blockedMsg = () => IN_CLAUDE
+    ? "Live weather can't load inside this Claude link, because it isn't allowed to contact weather services. Pick the weather below instead."
+    : "Couldn't get the weather right now. Check your connection, or pick the weather below.";
+
+  async function findCity(name) {
+    wx.status = "loading"; wx.msg = "Looking up " + name + "…"; renderWeather();
+    try {
+      const d = await getJSON("https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=" + encodeURIComponent(name));
+      const r = d.results && d.results[0];
+      if (!r) { wx.status = "error"; wx.msg = "Couldn't find \"" + name + "\". Try the city name only, like \"Austin\"."; renderWeather(); return; }
+      const label = r.name + (r.admin1 && r.admin1 !== r.name ? ", " + r.admin1 : r.country ? ", " + r.country : "");
+      loadWeather({ name: label, lat: r.latitude, lon: r.longitude });
+    } catch (e) {
+      wx.status = "error"; wx.msg = blockedMsg(); renderWeather();
+    }
+  }
+
+  async function loadWeather(place) {
+    wx.status = "loading"; wx.msg = "Getting today's weather…"; renderWeather();
+    try {
+      const d = await getJSON("https://api.open-meteo.com/v1/forecast?latitude=" + place.lat + "&longitude=" + place.lon +
+        "&current=temperature_2m,apparent_temperature,weather_code" +
+        "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1");
+      const feels = d.current.apparent_temperature;
+      const hi = d.daily.temperature_2m_max[0], lo = d.daily.temperature_2m_min[0];
+      const rain = d.daily.precipitation_probability_max ? (d.daily.precipitation_probability_max[0] || 0) : 0;
+      // Dress for the day, not just this minute: blend how it feels now with the day's high.
+      const basis = (feels + hi) / 2;
+      const bucket = basis >= 22 ? "hot" : basis >= 13 ? "mild" : "cold";
+      wx.place = place;
+      wx.data = { temp: d.current.temperature_2m, feels, hi, lo, rain, code: d.current.weather_code, bucket, at: Date.now() };
+      wx.wet = rain >= 50 || WET(d.current.weather_code);
+      wx.status = "ok"; wx.msg = ""; wx.editing = false;
+      ls.set("cs-place", place);
+      if (state.filters.weather === "any" || state.filters.weather === "auto") {
+        state.filters.weather = "auto";
+        shuffle();
+      }
+      renderAll();
+    } catch (e) {
+      wx.status = "error"; wx.msg = blockedMsg(); renderWeather();
+    }
+  }
+
+  function renderWeather() {
+    const now = $("wx-now"), form = $("wx-form"), msg = $("wx-msg");
+    if (wx.data && !wx.editing) {
+      const d = wx.data;
+      now.innerHTML =
+        '<div class="wx-temp">' + esc(deg(d.temp)) + "</div>" +
+        '<div class="wx-detail"><strong>' + esc(wx.place.name) + "</strong>" +
+        "<span>" + esc(describe(d.code)) + " · feels " + esc(deg(d.feels)) + " · high " + esc(deg(d.hi)) + ", low " + esc(deg(d.lo)) +
+        (d.rain ? " · " + d.rain + "% rain" : "") + "</span></div>" +
+        '<span class="wx-pill">Dress for ' + esc(d.bucket) + (wx.wet ? " + rain" : "") + "</span>" +
+        '<div class="wx-tools"><button class="btn small" type="button" data-action="wx-unit">°' + (wx.unit === "F" ? "C" : "F") + "</button>" +
+        '<button class="btn small" type="button" data-action="wx-change">Change city</button></div>';
+      form.hidden = true;
+    } else {
+      now.innerHTML = '<div class="wx-detail"><strong>Today\'s weather</strong><span>Add your city and outfits will match the forecast automatically.</span></div>' +
+        (wx.data ? '<div class="wx-tools"><button class="btn small" type="button" data-action="wx-cancel">Cancel</button></div>' : "");
+      form.hidden = false;
+    }
+    msg.textContent = wx.msg;
+    msg.hidden = !wx.msg;
+  }
+
+  // ---------- Outfit logic ----------
+  function weatherNow() {
     const w = state.filters.weather;
-    if (slot === "outer") return w === "cold" ? 1 : w === "mild" ? 0.55 : w === "hot" ? 0 : 0.35;
-    return 0.5; // accessory
+    if (w === "auto") return wx.data ? wx.data.bucket : "any";
+    return w;
+  }
+  const matches = it => {
+    const w = weatherNow(), o = state.filters.occasion;
+    return (w === "any" || it.weather.includes(w)) && (o === "any" || it.occasions.includes(o));
+  };
+  const poolFor = cat => closet().filter(i => i.cat === cat && matches(i));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const L = c => LIGHTNESS[c] == null ? .5 : LIGHTNESS[c];
+
+  // How likely an optional piece is to be added, given the weather and the rest of the outfit.
+  function chance(slot, o) {
+    const w = weatherNow(), wet = state.filters.weather === "auto" && wx.wet;
+    if (slot === "layer") return { hot: 0, mild: .5, cold: .75, any: .3 }[w];
+    if (slot === "outer") return w === "cold" ? 1 : w === "mild" ? (wet ? .9 : .25) : w === "hot" ? (wet ? .5 : 0) : .25;
+    if (slot === "belt") {
+      if (o.dress || !o.bottom) return 0;
+      return o.bottom.kind === "skirt" ? .3 : .85;
+    }
+    return .4; // accessory
+  }
+
+  // Higher is better: light/dark contrast between top and bottom, leather that matches,
+  // mostly neutrals, and at most one statement color or pattern.
+  function score(o) {
+    let s = 0;
+    const clothes = ["top", "dress", "bottom", "layer", "outer"].map(k => o[k]).filter(Boolean);
+    const bold = new Set(clothes.map(p => p.color).filter(c => !NEUTRAL.has(c)));
+    if (bold.size > 1) s -= 6;
+    if (clothes.filter(p => p.color === "pattern").length > 1) s -= 6;
+    s += clothes.filter(p => NEUTRAL.has(p.color)).length * .4;
+    if (o.top && o.bottom) {
+      s += Math.abs(L(o.top.color) - L(o.bottom.color)) * 4;
+      if (o.top.color === o.bottom.color) s -= 2;
+    }
+    const base = o.top || o.dress;
+    if (o.layer && base) {
+      s += Math.abs(L(o.layer.color) - L(base.color)) * 1.5;
+      if (o.layer.color === base.color) s -= 1;
+    }
+    const all = Object.values(o);
+    for (const p of all) if (p.trim && all.some(q => q !== p && q.color === p.trim)) s += 1.5; // an echoed accent ties it together
+    if (o.belt && o.shoes) {
+      const a = leather(o.belt.color), b = leather(o.shoes.color);
+      if (o.belt.color === o.shoes.color) s += 3;
+      else if (a === b) s += 2;
+      else if ((a === "black" && b === "brown") || (a === "brown" && b === "black")) s -= 3;
+    }
+    if (o.shoes && o.bottom && o.shoes.color === o.bottom.color && !NEUTRAL.has(o.shoes.color)) s -= 1;
+    return s + Math.random() * .8; // a little jitter keeps the shuffle fresh
+  }
+
+  function candidate(keep) {
+    const o = Object.assign({}, keep);
+    let useDress;
+    if (o.dress) useDress = true;
+    else if (o.top || o.bottom) useDress = false;
+    else {
+      const d = poolFor("dress").length;
+      const s = Math.min(poolFor("top").length, poolFor("bottom").length);
+      useDress = d > 0 && (s === 0 || Math.random() < d / (d + s * 2));
+    }
+    if (useDress) { delete o.top; delete o.bottom; o.dress = o.dress || pick(poolFor("dress")); }
+    else { delete o.dress; o.top = o.top || pick(poolFor("top")); o.bottom = o.bottom || pick(poolFor("bottom")); }
+    o.shoes = o.shoes || pick(poolFor("shoes"));
+    for (const slot of ["layer", "outer", "belt", "accessory"]) {
+      if (keep[slot]) continue;
+      if (Math.random() < chance(slot, o)) o[slot] = pick(poolFor(slot)); else delete o[slot];
+    }
+    for (const k of Object.keys(o)) if (!o[k]) delete o[k];
+    return o;
+  }
+  const keyOf = o => Object.values(o).map(p => p.id).sort().join(",");
+
+  function titleFor(o) {
+    let first, second;
+    if (o.dress) { first = colorName(o.dress.color); second = colorName((o.layer || o.outer || o.shoes || o.dress).color); }
+    else if (o.top && o.bottom) {
+      const all = Object.values(o);
+      const echoed = o.top.trim && o.top.trim !== o.top.color && all.some(q => q !== o.top && q.color === o.top.trim);
+      first = echoed && (o.top.kind === "polo" || o.top.kind === "shirt") ? colorName(o.top.trim) + " collar" : colorName(o.top.color);
+      second = colorName(o.bottom.color);
+    } else return "";
+    return first === second ? "All " + first : cap(first) + " and " + second;
   }
 
   function shuffle() {
@@ -480,79 +725,171 @@
       const it = findItem(state.current[slot]);
       if (it) keep[slot] = it; else state.locked.delete(slot);
     }
-    let first = null, found = null;
-    for (let n = 0; n < 300 && !found; n++) {
-      const o = Object.assign({}, keep);
-      let useDress;
-      if (o.dress) useDress = true;
-      else if (o.top || o.bottom) useDress = false;
-      else {
-        const d = poolFor("dress").length;
-        const s = Math.min(poolFor("top").length, poolFor("bottom").length);
-        useDress = d > 0 && (s === 0 || Math.random() < d / (d + s * 2));
-      }
-      if (useDress) { o.dress = o.dress || pick(poolFor("dress")); }
-      else { o.top = o.top || pick(poolFor("top")); o.bottom = o.bottom || pick(poolFor("bottom")); }
-      o.shoes = o.shoes || pick(poolFor("shoes"));
-      for (const slot of ["outer", "accessory"]) {
-        if (!o[slot] && Math.random() < chance(slot)) o[slot] = pick(poolFor(slot));
-      }
-      if (!first) first = o;
-      if (!clashes(Object.values(o))) found = o;
+    const seen = new Map();
+    for (let n = 0; n < 240; n++) {
+      const o = candidate(keep);
+      const k = keyOf(o);
+      if (!seen.has(k)) seen.set(k, { o, s: score(o) });
     }
-    const result = found || first || {};
+    const prev = Object.values(state.current).sort().join(",");
+    let ranked = Array.from(seen.entries()).filter(([k]) => k !== prev).map(([, v]) => v);
+    if (!ranked.length) ranked = Array.from(seen.values());
+    ranked.sort((a, b) => b.s - a.s);
+    const chosen = ranked.length ? pick(ranked.slice(0, 5)).o : {};
     state.current = {};
-    for (const [slot, it] of Object.entries(result)) if (it) state.current[slot] = it.id;
+    for (const [slot, it] of Object.entries(chosen)) state.current[slot] = it.id;
+    const occ = state.filters.occasion;
+    state.counters[occ] = (state.counters[occ] || 0) + 1;
+    const t = titleFor(chosen);
+    state.title = (occ === "any" ? "Outfit" : cap(occ)) + " " + state.counters[occ] + (t ? " — " + t : "");
+    state.fresh = true;
+  }
+
+  function currentOutfit() {
+    const o = {};
+    for (const [slot, id] of Object.entries(state.current)) { const it = findItem(id); if (it) o[slot] = it; }
+    return o;
   }
 
   function swap(slot) {
-    const others = Object.entries(state.current).filter(([s]) => s !== slot).map(([, id]) => findItem(id));
-    const all = poolFor(slot).filter(i => i.id !== state.current[slot]);
-    if (!all.length) { toast("No other " + CAT[slot].plural.toLowerCase() + " match these filters."); return; }
-    const good = all.filter(i => !clashes(others.concat(i)));
-    state.current[slot] = pick(good.length ? good : all).id;
+    const o = currentOutfit();
+    const alts = poolFor(slot).filter(i => i.id !== state.current[slot]);
+    if (!alts.length) { toast("No other " + SLOT_PLURAL[slot].toLowerCase() + " match these filters."); return; }
+    const ranked = alts.map(i => ({ i, s: score(Object.assign({}, o, { [slot]: i })) })).sort((a, b) => b.s - a.s);
+    state.current[slot] = pick(ranked.slice(0, 3)).i.id;
+    const t = titleFor(currentOutfit());
+    state.title = state.title.split(" — ")[0] + (t ? " — " + t : "");
+    state.fresh = true;
     renderOutfit();
   }
 
-  // ---------- Rendering ----------
-  function thumb(it) {
-    if (it.photo && /^data:image\//.test(it.photo)) return '<div class="thumb"><img src="' + esc(it.photo) + '" alt=""></div>';
-    const fill = COLORS[it.color] || "#999";
-    const handle = it.cat === "accessory"
-      ? '<path d="M17 18 Q17 8 24 8 Q31 8 31 18" fill="none" stroke="var(--ink)" stroke-opacity=".55" stroke-width="2"/>' : "";
-    return '<div class="thumb"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="' + ICONS[it.cat] + '" fill="' + fill +
-      '" stroke="var(--ink)" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>' + handle + "</svg></div>";
+  // ---------- Drawing ----------
+  const fillOf = c => COLORS[c] || "#999";
+  const ST = 'stroke="#1A1D26" stroke-opacity=".3" stroke-width="1.2" stroke-linejoin="round"';
+  const DETAIL = 'fill="none" stroke="#000" stroke-opacity=".22" stroke-width="1.4" stroke-linecap="round"';
+  function svg(vb, inner) { return '<svg viewBox="' + vb + '" aria-hidden="true">' + inner + "</svg>"; }
+
+  function drawPiece(it) {
+    const k = KIND[it.kind] || KIND.tee;
+    const c = fillOf(it.color);
+    const t = it.trim ? fillOf(it.trim) : null;
+    const tee = "M32 6 L14 12 L2 34 L17 40 L23 30 L23 90 L77 90 L77 30 L83 40 L98 34 L86 12 L68 6 Q50 16 32 6Z";
+    switch (k.shape) {
+      case "tee":
+        return svg("0 0 100 92", '<path d="' + tee + '" fill="' + c + '" ' + ST + '/><path d="M32 6 Q50 16 68 6" fill="none" stroke="' + (t || "rgba(0,0,0,.2)") + '" stroke-width="3"/>');
+      case "polo":
+        return svg("0 0 100 92", '<path d="' + tee + '" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M50 17 V38" stroke="' + (t || "rgba(0,0,0,.3)") + '" stroke-width="2"/>' +
+          '<path d="M33 5 L50 18 L67 5 L63 0 L37 0Z" fill="' + (t || c) + '" ' + ST + '/>' +
+          '<path d="M2 34 L17 40 M98 34 L83 40" stroke="' + (t || "rgba(0,0,0,.22)") + '" stroke-width="3"/>');
+      case "shirt":
+        return svg("0 0 100 104", '<path d="M32 6 L14 12 L4 96 L16 97 L24 38 L24 102 L76 102 L76 38 L84 97 L96 96 L86 12 L68 6 L50 18 Z" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M50 19 V102" ' + DETAIL + '/><path d="M33 5 L50 19 L67 5 L62 0 L38 0Z" fill="' + (t || c) + '" ' + ST + '/>' +
+          '<circle cx="53" cy="34" r="1.3" fill="rgba(0,0,0,.35)"/><circle cx="53" cy="54" r="1.3" fill="rgba(0,0,0,.35)"/><circle cx="53" cy="74" r="1.3" fill="rgba(0,0,0,.35)"/>');
+      case "folded":
+        return svg("0 0 100 84", '<rect x="4" y="4" width="92" height="76" rx="7" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M34 4 L50 30 L66 4Z" fill="' + (t || "rgba(0,0,0,.2)") + '"/><path d="M30 4 L50 34 L70 4" ' + DETAIL + '/>' +
+          '<path d="M6 70 H94" stroke="rgba(0,0,0,.14)" stroke-width="7"/>');
+      case "jacket":
+        return svg("0 0 100 100", '<path d="M32 6 L14 12 L4 92 L16 93 L24 38 L24 98 L76 98 L76 38 L84 93 L96 92 L86 12 L68 6 L50 24 Z" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M32 6 L40 40 L50 24 L60 40 L68 6" ' + DETAIL + '/><path d="M50 24 V98" ' + DETAIL + '/>' +
+          '<path d="M30 62 H42 M58 62 H70" ' + DETAIL + '/>');
+      case "coat":
+        return svg("0 0 100 134", '<path d="M32 6 L14 12 L4 104 L16 105 L24 40 L24 132 L76 132 L76 40 L84 105 L96 104 L86 12 L68 6 L50 26 Z" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M32 6 L40 46 L50 26 L60 46 L68 6" ' + DETAIL + '/>' +
+          '<circle cx="44" cy="62" r="2" fill="rgba(0,0,0,.35)"/><circle cx="56" cy="62" r="2" fill="rgba(0,0,0,.35)"/>' +
+          '<circle cx="44" cy="82" r="2" fill="rgba(0,0,0,.35)"/><circle cx="56" cy="82" r="2" fill="rgba(0,0,0,.35)"/>');
+      case "pants":
+        return svg("0 0 60 132", '<path d="M8 2 H52 L57 130 H36 L30 34 L24 130 H3 Z" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M8 9 H52" ' + DETAIL + '/><path d="M30 9 V30" ' + DETAIL + '/>' +
+          '<path d="M10 10 Q17 15 15 24 M50 10 Q43 15 45 24" ' + DETAIL + '/>' +
+          (it.kind === "jeans" ? '<path d="M5 124 H24 M36 124 H56" stroke="#D9A441" stroke-opacity=".6" stroke-width="1" stroke-dasharray="2 2"/>' : ""));
+      case "shorts":
+        return svg("0 0 70 62", '<path d="M8 2 H62 L68 58 H40 L35 26 L30 58 H2 Z" fill="' + c + '" ' + ST + '/><path d="M8 9 H62" ' + DETAIL + '/><path d="M35 9 V24" ' + DETAIL + '/>');
+      case "skirt":
+        return svg("0 0 80 72", '<path d="M20 2 H60 L78 70 H2 Z" fill="' + c + '" ' + ST + '/><path d="M19 9 H61" ' + DETAIL + '/>');
+      case "dress":
+        return svg("0 0 80 132", '<path d="M26 2 H54 L53 12 L60 20 L56 42 L78 130 H2 L24 42 L20 20 L27 12 Z" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M24 42 H56" stroke="' + (t || "rgba(0,0,0,.22)") + '" stroke-width="2.5"/>');
+      case "shoes": {
+        const sole = t || (it.kind === "sneakers" ? "#EEEAE0" : c);
+        const one = x =>
+          '<rect x="' + x + '" y="4" width="38" height="78" rx="19" fill="' + sole + '" ' + ST + '/>' +
+          '<rect x="' + (x + 3) + '" y="7" width="32" height="70" rx="16" fill="' + c + '"/>' +
+          '<path d="M' + (x + 12) + ' 26 H' + (x + 26) + ' M' + (x + 12) + ' 33 H' + (x + 26) + ' M' + (x + 12) + ' 40 H' + (x + 26) + '" ' + DETAIL + '/>' +
+          '<ellipse cx="' + (x + 19) + '" cy="60" rx="9" ry="12" fill="rgba(0,0,0,.22)"/>';
+        return svg("0 0 100 86", one(6) + one(56));
+      }
+      case "belt":
+        return svg("0 0 80 86", '<circle cx="40" cy="38" r="26" fill="none" stroke="' + c + '" stroke-width="9"/>' +
+          '<circle cx="40" cy="38" r="30.5" fill="none" stroke="rgba(0,0,0,.25)"/><circle cx="40" cy="38" r="21.5" fill="none" stroke="rgba(0,0,0,.25)"/>' +
+          '<rect x="44" y="52" width="9" height="30" rx="2" fill="' + c + '" ' + ST + '/>' +
+          '<rect x="39.5" y="62" width="18" height="17" rx="2" fill="none" stroke="' + (t || "#A38B55") + '" stroke-width="3"/>');
+      case "watch":
+        return svg("0 0 50 90", '<rect x="17" y="2" width="16" height="86" rx="4" fill="' + c + '" ' + ST + '/>' +
+          '<circle cx="25" cy="45" r="15" fill="' + (t || "#ECECE8") + '" stroke="#8C8E94" stroke-width="3"/>' +
+          '<path d="M25 45 V36 M25 45 L31 48" stroke="#1A1D26" stroke-width="1.6" stroke-linecap="round"/>');
+      case "bag":
+        return svg("0 0 80 80", '<path d="M26 30 Q26 8 40 8 Q54 8 54 30" fill="none" stroke="' + (t || c) + '" stroke-width="4"/>' +
+          '<path d="M10 30 H70 L66 76 H14 Z" fill="' + c + '" ' + ST + '/>');
+      case "cap":
+        return svg("0 0 90 56", '<path d="M8 44 Q8 6 44 6 Q80 6 80 44 Z" fill="' + c + '" ' + ST + '/>' +
+          '<path d="M44 44 H88 Q88 53 77 53 H44 Z" fill="' + (t || c) + '" ' + ST + '/><circle cx="44" cy="7" r="3" fill="' + (t || c) + '"/>');
+    }
+    return "";
   }
+  const hasPhoto = it => it.photo && /^data:image\//.test(it.photo);
+  function art(it) { return hasPhoto(it) ? '<img src="' + esc(it.photo) + '" alt="' + esc(it.name) + '">' : drawPiece(it); }
+  function thumb(it) { return '<div class="thumb">' + art(it) + "</div>"; }
+
+  function boardHTML(o, title, mini) {
+    const pc = (slot, extra) => o[slot]
+      ? '<div class="pc pc-' + slot + (extra ? " " + extra : "") + '" title="' + esc(o[slot].name) + '">' + art(o[slot]) + "</div>" : "";
+    const wide = o.bottom && (o.bottom.kind === "shorts" || o.bottom.kind === "skirt") ? "wide" : "";
+    return '<figure class="board' + (mini ? " mini" : "") + (state.fresh && !mini ? " fresh" : "") + '" style="margin:0">' +
+      (title ? '<figcaption class="board-title">' + esc(title) + "</figcaption>" : "") +
+      '<div class="lay">' +
+        '<div class="col side left">' + pc("accessory") + pc("belt") + "</div>" +
+        '<div class="col mid">' + pc("top") + pc("dress") + pc("bottom", wide) + pc("shoes") + "</div>" +
+        '<div class="col side right">' + pc("layer") + pc("outer") + "</div>" +
+      "</div></figure>";
+  }
+
+  // ---------- Rendering ----------
+  const SLOT_ORDER = ["top", "dress", "bottom", "layer", "outer", "shoes", "belt", "accessory"];
   function metaLine(it) {
-    return [it.color].concat(it.weather || [], it.occasions || []).join(" · ");
+    return [colorName(it.color) + (it.trim ? " + " + colorName(it.trim) : "")].concat(it.weather, it.occasions).join(" · ");
   }
 
   function renderOutfit() {
-    const box = $("outfit"), note = $("outfit-note");
-    const slots = SLOT_ORDER.filter(s => state.current[s]);
-    box.innerHTML = slots.map(slot => {
-      const it = findItem(state.current[slot]);
-      const locked = state.locked.has(slot);
-      return '<article class="tag' + (locked ? " locked" : "") + '">' +
-        '<div class="slot mono"><span>' + esc(CAT[slot].label) + "</span></div>" +
-        thumb(it) +
-        "<h3>" + esc(it.name) + "</h3>" +
-        '<div class="meta mono">' + esc(metaLine(it)) + "</div>" +
-        '<div class="row">' +
-          '<button class="btn small lock" data-action="lock" data-slot="' + slot + '" aria-pressed="' + locked + '">' + (locked ? "Kept" : "Keep") + "</button>" +
-          '<button class="btn small" data-action="swap" data-slot="' + slot + '">Swap</button>' +
-        "</div></article>";
-    }).join("");
+    const box = $("outfit"), list = $("pieces"), note = $("outfit-note");
+    const o = currentOutfit();
+    const hasBase = o.dress || (o.top && o.bottom);
 
-    const hasBase = state.current.dress || (state.current.top && state.current.bottom);
     if (!closet().some(matches)) {
       box.innerHTML = '<div class="empty-state"><h3>Nothing matches yet</h3><p>None of your pieces are tagged for this weather and occasion. Try "Any", or edit a few pieces in My closet.</p></div>';
-      note.textContent = "";
-    } else if (!hasBase) {
+      list.innerHTML = ""; note.textContent = "";
+      $("save-btn").disabled = true;
+      return;
+    }
+    box.innerHTML = boardHTML(o, state.title, false);
+    state.fresh = false;
+
+    list.innerHTML = SLOT_ORDER.filter(s => o[s]).map(slot => {
+      const it = o[slot], locked = state.locked.has(slot);
+      return '<div class="piece' + (locked ? " locked" : "") + '">' + thumb(it) +
+        '<div class="who"><span class="mono">' + esc(SLOTS[slot]) + "</span><b>" + esc(it.name) + "</b></div>" +
+        '<div class="row"><button class="btn small lock" data-action="lock" data-slot="' + slot + '" aria-pressed="' + locked + '">' + (locked ? "Kept" : "Keep") + "</button>" +
+        '<button class="btn small" data-action="swap" data-slot="' + slot + '">Swap</button></div></div>';
+    }).join("");
+
+    if (!hasBase) {
       const missing = [];
-      if (!state.current.top && !state.current.dress) missing.push("tops");
-      if (!state.current.bottom && !state.current.dress) missing.push("bottoms");
-      note.innerHTML = "<strong>Missing " + esc(missing.join(" and ")) + "</strong> for these filters. Add some in My closet or loosen the filters.";
+      if (!o.top && !o.dress) missing.push("tops");
+      if (!o.bottom && !o.dress) missing.push("bottoms");
+      note.innerHTML = "<strong>Missing " + esc(missing.join(" and ")) + "</strong> for this weather and occasion. Add some in My closet or change the filters.";
+    } else if (state.filters.weather === "auto" && wx.wet && !o.outer) {
+      note.textContent = "Rain is likely today. Add a jacket to your closet and it'll be picked for wet days.";
     } else {
       note.textContent = state.locked.size ? "Kept pieces stay put when you shuffle." : "Tap Keep on a piece you love, then shuffle the rest.";
     }
@@ -561,6 +898,9 @@
   }
 
   function renderFilters() {
+    const auto = $("chip-auto");
+    auto.hidden = !wx.data;
+    if (wx.data) auto.textContent = "Today · " + cap(wx.data.bucket);
     document.querySelectorAll("[data-filter]").forEach(b => {
       b.setAttribute("aria-pressed", String(state.filters[b.dataset.filter] === b.dataset.value));
     });
@@ -569,13 +909,14 @@
   function renderCloset() {
     const list = $("closet-list");
     if (usingSamples()) {
-      list.innerHTML = '<div class="empty-state"><h3>Your closet is empty</h3><p>Start with the pieces you wear most: a few tops, a couple of bottoms and one pair of shoes is enough for the shuffle to work. A photo is optional. The color and tags are what matter.</p></div>';
+      list.innerHTML = '<div class="empty-state"><h3>Your closet is empty</h3><p>Start with what you wear most: a few tops, a couple of pants, a pair of shoes and a belt is enough for the shuffle to work.</p><p>A photo is optional. The type and color are what the outfit picker uses.</p></div>';
       return;
     }
-    list.innerHTML = CATS.map(c => {
-      const its = state.items.filter(i => i.cat === c.id);
+    const cats = ["top", "layer", "bottom", "dress", "outer", "shoes", "belt", "accessory"];
+    list.innerHTML = cats.map(cat => {
+      const its = state.items.filter(i => i.cat === cat);
       if (!its.length) return "";
-      return '<section class="cat-group"><h2>' + esc(c.plural) + ' <span class="mono">' + its.length + "</span></h2>" +
+      return '<section class="cat-group"><h2>' + esc(SLOT_PLURAL[cat]) + ' <span class="mono">' + its.length + "</span></h2>" +
         '<div class="items">' + its.map(it =>
           '<article class="item">' + thumb(it) + "<h3>" + esc(it.name) + "</h3>" +
           '<div class="meta mono">' + esc(metaLine(it)) + "</div>" +
@@ -591,15 +932,16 @@
       list.innerHTML = '<div class="empty-state"><h3>No saved outfits yet</h3><p>When a shuffle lands on something you like, tap "Save this outfit" and it shows up here.</p></div>';
       return;
     }
-    list.innerHTML = state.outfits.map(o => {
-      const its = (o.itemIds || []).map(findItem).filter(Boolean);
-      const when = new Date(o.created || Date.now()).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-      return '<article class="saved"><div class="minis">' + its.map(thumb).join("") + "</div>" +
-        '<div style="display:grid;gap:6px;justify-items:end"><span class="when">Saved ' + esc(when) +
-        (its.length < (o.itemIds || []).length ? " · some pieces were removed" : "") + "</span>" +
-        '<div class="row" style="display:flex;gap:6px"><button class="btn small" data-action="wear" data-id="' + esc(o.id) + '">Wear this</button>' +
-        '<button class="btn small danger" data-action="unsave" data-id="' + esc(o.id) + '">Remove</button></div></div></article>';
-    }).join("");
+    list.innerHTML = '<div class="saved-grid">' + state.outfits.map(sv => {
+      const o = {};
+      (sv.itemIds || []).forEach(id => { const it = findItem(id); if (it) o[it.cat] = it; });
+      const lost = (sv.itemIds || []).length - Object.keys(o).length;
+      const when = new Date(sv.created || Date.now()).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      return '<article class="saved">' + boardHTML(o, sv.title || "", true) +
+        '<div class="row"><span class="when">Saved ' + esc(when) + (lost > 0 ? " · " + lost + " piece" + (lost > 1 ? "s" : "") + " removed" : "") + "</span>" +
+        '<span style="display:flex;gap:6px"><button class="btn small" data-action="wear" data-id="' + esc(sv.id) + '">Wear this</button>' +
+        '<button class="btn small danger" data-action="unsave" data-id="' + esc(sv.id) + '">Remove</button></span></div></article>';
+    }).join("") + "</div>";
   }
 
   function renderCounts() {
@@ -614,15 +956,19 @@
   }
 
   function renderAll() {
-    renderTabs(); renderFilters(); renderOutfit(); renderCloset(); renderSaved(); renderCounts();
+    renderTabs(); renderWeather(); renderFilters(); renderOutfit(); renderCloset(); renderSaved(); renderCounts();
   }
 
   // ---------- Form ----------
   function buildForm() {
-    $("f-type").innerHTML = CATS.map(c => '<option value="' + c.id + '">' + esc(c.label) + "</option>").join("");
-    $("f-colors").innerHTML = Object.keys(COLORS).map(k =>
-      '<button type="button" class="swatch" data-color="' + k + '" aria-label="' + k + '" title="' + k + '" style="background:' +
-      (k === "pattern" ? "repeating-linear-gradient(45deg,#c7323a 0 4px,#e8d9b8 4px 8px)" : COLORS[k]) + '"></button>').join("");
+    const groups = ["top", "layer", "bottom", "dress", "outer", "shoes", "belt", "accessory"];
+    $("f-kind").innerHTML = groups.map(g => '<optgroup label="' + esc(SLOT_PLURAL[g]) + '">' +
+      KINDS.filter(k => k.cat === g).map(k => '<option value="' + k.id + '">' + esc(k.label) + "</option>").join("") + "</optgroup>").join("");
+    const sw = (k, attr) => '<button type="button" class="swatch" ' + attr + '="' + k + '" aria-label="' + esc(colorName(k)) + '" title="' + esc(colorName(k)) +
+      '" style="background:' + (k === "pattern" ? "repeating-linear-gradient(45deg,#2E4470 0 3px,#E8DDC6 3px 8px)" : COLORS[k]) + '"></button>';
+    $("f-colors").innerHTML = Object.keys(COLORS).map(k => sw(k, "data-color")).join("");
+    $("f-trims").innerHTML = '<button type="button" class="swatch none" data-trim="" aria-label="None" title="None"></button>' +
+      Object.keys(COLORS).filter(k => k !== "pattern").map(k => sw(k, "data-trim")).join("");
     const checks = (list, name) => list.map(([v, l]) =>
       '<label><input type="checkbox" name="' + name + '" value="' + v + '" id="f-' + name + "-" + v + '"> ' + l + "</label>").join("");
     $("f-weather").innerHTML = checks(WEATHER, "weather");
@@ -631,13 +977,15 @@
 
   function fillForm() {
     const f = state.form;
-    $("f-type").value = f.cat;
+    $("f-kind").value = f.kind;
     $("f-name").value = f.name;
-    document.querySelectorAll(".swatch").forEach(s => s.setAttribute("aria-pressed", String(s.dataset.color === f.color)));
-    $("color-name").textContent = f.color.charAt(0).toUpperCase() + f.color.slice(1);
+    document.querySelectorAll("[data-color]").forEach(s => s.setAttribute("aria-pressed", String(s.dataset.color === f.color)));
+    document.querySelectorAll("[data-trim]").forEach(s => s.setAttribute("aria-pressed", String((s.dataset.trim || null) === f.trim)));
+    $("color-name").textContent = cap(colorName(f.color));
+    $("trim-name").textContent = f.trim ? cap(colorName(f.trim)) + " collar, trim or sole" : "None";
     document.querySelectorAll('input[name="weather"]').forEach(c => { c.checked = f.weather.includes(c.value); });
     document.querySelectorAll('input[name="occasion"]').forEach(c => { c.checked = f.occasions.includes(c.value); });
-    $("photo-preview").outerHTML = thumb({ cat: f.cat, color: f.color, photo: f.photo }).replace('class="thumb"', 'class="thumb" id="photo-preview"');
+    $("photo-preview").innerHTML = art({ kind: f.kind, color: f.color, trim: f.trim, photo: f.photo, name: "Preview" });
     $("photo-clear").hidden = !f.photo;
     const editing = !!state.editingId;
     $("form-title").textContent = editing ? "Edit piece" : "Add a piece";
@@ -653,11 +1001,13 @@
         const img = new Image();
         img.onerror = reject;
         img.onload = () => {
-          const s = Math.min(1, 360 / Math.max(img.width, img.height));
+          const s = Math.min(1, 420 / Math.max(img.width, img.height));
           const cv = document.createElement("canvas");
           cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
-          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-          resolve(cv.toDataURL("image/jpeg", 0.75));
+          const ctx = cv.getContext("2d");
+          ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+          ctx.drawImage(img, 0, 0, cv.width, cv.height);
+          resolve(cv.toDataURL("image/jpeg", 0.78));
         };
         img.src = r.result;
       };
@@ -683,6 +1033,7 @@
       shuffle(); renderFilters(); renderOutfit(); return;
     }
     if (t.dataset.color) { state.form.color = t.dataset.color; fillForm(); return; }
+    if (t.dataset.trim !== undefined) { state.form.trim = t.dataset.trim || null; fillForm(); return; }
 
     const a = t.dataset.action;
     if (a === "shuffle") { shuffle(); renderOutfit(); }
@@ -693,18 +1044,20 @@
     }
     else if (a === "swap") swap(t.dataset.slot);
     else if (a === "save-outfit") {
-      const ids = SLOT_ORDER.map(s => state.current[s]).filter(Boolean);
+      const ids = Object.values(state.current);
       const key = ids.slice().sort().join(",");
       if (state.outfits.some(o => (o.itemIds || []).slice().sort().join(",") === key)) { toast("Already saved"); return; }
-      store.putOutfit({ id: newId(), itemIds: ids, created: Date.now() });
+      store.putOutfit({ id: newId(), itemIds: ids, title: state.title, created: Date.now() });
+      state.outfits.sort((x, y) => (y.created || 0) - (x.created || 0));
       renderSaved(); renderCounts(); toast("Outfit saved");
     }
-    else if (a === "go-add") { state.tab = "closet"; renderTabs(); $("f-type").focus(); }
+    else if (a === "go-add") { state.tab = "closet"; renderTabs(); $("f-kind").focus(); }
     else if (a === "edit") {
       const it = state.items.find(i => i.id === t.dataset.id);
       if (!it) return;
       state.editingId = it.id;
-      state.form = { cat: it.cat, name: it.name, color: it.color, weather: (it.weather || []).slice(), occasions: (it.occasions || []).slice(), photo: it.photo || null };
+      state.form = { kind: it.kind, name: it.name, color: it.color, trim: it.trim || null,
+        weather: it.weather.slice(), occasions: it.occasions.slice(), photo: it.photo || null };
       fillForm();
       $("item-form").scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -723,17 +1076,38 @@
       });
     }
     else if (a === "wear") {
-      const o = state.outfits.find(x => x.id === t.dataset.id);
-      if (!o) return;
+      const sv = state.outfits.find(x => x.id === t.dataset.id);
+      if (!sv) return;
       state.current = {};
-      (o.itemIds || []).map(findItem).filter(Boolean).forEach(it => { state.current[it.cat] = it.id; });
+      (sv.itemIds || []).map(findItem).filter(Boolean).forEach(it => { state.current[it.cat] = it.id; });
       state.locked = new Set(Object.keys(state.current));
+      state.title = sv.title || "Saved outfit";
+      state.fresh = true;
       state.tab = "dress"; renderAll(); window.scrollTo({ top: 0 });
     }
     else if (a === "unsave") { store.delOutfit(t.dataset.id).then(() => { renderSaved(); renderCounts(); }); }
+    else if (a === "wx-change") { wx.editing = true; wx.msg = ""; renderWeather(); $("wx-city").focus(); }
+    else if (a === "wx-cancel") { wx.editing = false; wx.msg = ""; renderWeather(); }
+    else if (a === "wx-unit") { wx.unit = wx.unit === "F" ? "C" : "F"; ls.set("cs-unit", wx.unit); renderWeather(); }
   });
 
-  $("f-type").addEventListener("change", e => { state.form.cat = e.target.value; fillForm(); });
+  $("wx-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const name = $("wx-city").value.trim();
+    if (!name) { wx.msg = "Type a city first."; renderWeather(); return; }
+    findCity(name);
+  });
+  $("wx-geo").addEventListener("click", () => {
+    if (!navigator.geolocation) { wx.msg = "This browser can't share your location. Type your city instead."; renderWeather(); return; }
+    wx.msg = "Finding you…"; renderWeather();
+    navigator.geolocation.getCurrentPosition(
+      p => loadWeather({ name: "Your location", lat: +p.coords.latitude.toFixed(3), lon: +p.coords.longitude.toFixed(3) }),
+      () => { wx.msg = "Location isn't available here. Type your city instead."; renderWeather(); },
+      { timeout: 10000, maximumAge: 600000 }
+    );
+  });
+
+  $("f-kind").addEventListener("change", e => { state.form.kind = e.target.value; fillForm(); });
   $("f-name").addEventListener("input", e => { state.form.name = e.target.value; });
   $("f-weather").addEventListener("change", () => {
     state.form.weather = Array.from(document.querySelectorAll('input[name="weather"]:checked')).map(c => c.value);
@@ -757,20 +1131,20 @@
     if (!f.occasions.length) { toast("Pick at least one occasion."); return; }
     const wasSamples = usingSamples();
     const existing = state.editingId && state.items.find(i => i.id === state.editingId);
-    const name = f.name.trim() || (f.color.charAt(0).toUpperCase() + f.color.slice(1) + " " + CAT[f.cat].label.toLowerCase());
-    const item = {
+    const name = f.name.trim() || cap(colorName(f.color)) + " " + KIND[f.kind].label.split(" /")[0].toLowerCase();
+    const item = normalize({
       id: existing ? existing.id : newId(),
-      name, cat: f.cat, color: f.color,
+      name, kind: f.kind, color: f.color, trim: f.trim,
       weather: f.weather.slice(), occasions: f.occasions.slice(),
       photo: f.photo || null,
       created: existing ? existing.created : Date.now()
-    };
+    });
     await store.putItem(item);
     toast(existing ? "Changes saved" : "Added " + name);
     if (wasSamples) { state.current = {}; state.locked.clear(); shuffle(); }
-    const keepCat = f.cat;
+    const keepKind = f.kind;
     resetForm();
-    if (!existing) { state.form.cat = keepCat; fillForm(); }
+    if (!existing) { state.form.kind = keepKind; fillForm(); }
     renderAll();
   });
 
@@ -781,6 +1155,8 @@
   shuffle();
   renderAll();
   connectCloud();
+  const savedPlace = ls.get("cs-place");
+  if (savedPlace && typeof savedPlace.lat === "number") loadWeather(savedPlace);
 })();
 </script>
 <!-- APP END -->
