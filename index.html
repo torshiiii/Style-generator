@@ -210,6 +210,33 @@
   .item .row { display: flex; gap: 6px; }
   .item .row .btn { flex: 1; justify-content: center; padding-inline: 6px; }
 
+  /* Add from photos */
+  .bulk {
+    background: var(--surface); border-radius: 16px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 24px;
+    display: grid; gap: 14px; border: 2px dashed transparent;
+  }
+  .bulk.over { border-color: var(--accent); }
+  .bulk-head { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+  .bulk-head h2 { font-size: 22px; }
+  .bulk-head p { margin: 4px 0 0; color: var(--muted); max-width: 52ch; }
+  .bulk input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .bulk-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .bulk-bar .grow { flex: 1 1 200px; color: var(--muted); font-size: 14px; margin: 0; }
+  .drafts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .draft { border: 1.5px solid var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 8px; align-content: start; }
+  .draft .status { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+  .draft .status.ai { color: var(--accent); }
+  .draft select, .draft input[type="text"] {
+    width: 100%; border: 1.5px solid var(--line); background: var(--bg); border-radius: 8px; padding: 7px 9px; font-size: 14px;
+  }
+  .draft.busy .thumb { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
+  @media (prefers-reduced-motion: reduce) { .draft.busy .thumb { animation: none; } }
+  .toggles { display: flex; flex-wrap: wrap; gap: 4px; }
+  .toggles button { border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 700; }
+  .toggles button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .x { border: 0; background: transparent; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+
   /* Saved */
   .saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
   .saved { background: var(--surface); border-radius: 16px; padding: 10px; box-shadow: var(--shadow); display: grid; gap: 10px; }
@@ -294,6 +321,26 @@
 
   <!-- CLOSET -->
   <section id="panel-closet" role="tabpanel" aria-labelledby="tab-closet" hidden>
+    <div class="bulk" id="bulk">
+      <div class="bulk-head">
+        <div>
+          <h2>Add from photos</h2>
+          <p id="bulk-lede">Pick as many photos as you like. You'll check each one before it's added.</p>
+        </div>
+        <label class="btn primary" for="f-photos">Choose photos</label>
+        <input type="file" id="f-photos" accept="image/*" multiple>
+      </div>
+      <div id="drafts-box" hidden>
+        <div class="bulk-bar">
+          <p class="grow" id="ai-note" aria-live="polite"></p>
+          <button class="btn small" type="button" data-action="ai-retry" id="ai-retry" hidden>Try AI again</button>
+          <button class="btn small" type="button" data-action="drafts-discard">Discard all</button>
+          <button class="btn small" type="button" data-action="drafts-add" id="drafts-add" style="background:var(--accent);color:var(--on-accent)">Add all</button>
+        </div>
+        <div class="drafts" id="drafts" style="margin-top:12px"></div>
+      </div>
+    </div>
+
     <div class="closet-layout">
       <form class="add" id="item-form" novalidate>
         <h2 id="form-title">Add a piece</h2>
@@ -308,7 +355,7 @@
               <button type="button" class="btn small danger" id="photo-clear" hidden>Remove photo</button>
             </div>
           </div>
-          <p class="hint">Lay the piece flat on a white sheet or bed and shoot from above. It blends right into the outfit board.</p>
+          <p class="hint" id="photo-hint">Lay the piece flat on a white sheet or bed and shoot from above. It blends right into the outfit board.</p>
         </div>
 
         <div class="field">
@@ -993,32 +1040,218 @@
     $("form-cancel").hidden = !editing;
   }
 
-  function shrinkPhoto(file) {
+  // Reads a photo into a small copy for the closet and a larger one for AI to look at.
+  function readPhoto(file) {
     return new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onerror = reject;
-      r.onload = () => {
-        const img = new Image();
-        img.onerror = reject;
-        img.onload = () => {
-          const s = Math.min(1, 420 / Math.max(img.width, img.height));
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("unreadable")); };
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const draw = max => {
+          const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
           const cv = document.createElement("canvas");
-          cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+          cv.width = Math.max(1, Math.round(img.naturalWidth * s)); cv.height = Math.max(1, Math.round(img.naturalHeight * s));
           const ctx = cv.getContext("2d");
           ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
           ctx.drawImage(img, 0, 0, cv.width, cv.height);
-          resolve(cv.toDataURL("image/jpeg", 0.78));
+          return cv;
         };
-        img.src = r.result;
+        const photo = draw(420).toDataURL("image/jpeg", 0.78);
+        draw(768).toBlob(blob => resolve({ photo, blob }), "image/jpeg", 0.85);
       };
-      r.readAsDataURL(file);
+      img.src = url;
     });
+  }
+
+  // ---------- AI identification (Claude, available inside the Claude link) ----------
+  let aiPromise = null;
+  function getAI() {
+    if (!aiPromise) {
+      aiPromise = (async () => {
+        if (!IN_CLAUDE) return null;
+        try {
+          const s = await window.claude.use("sample");
+          if (!s) return null;
+          const caps = await s.limits().catch(() => null);
+          if (!caps || !caps.images) return null;
+          return { ask: s, perCall: Math.max(1, Math.min(caps.images.maxCount || 1, 4)) };
+        } catch (e) { return null; }
+      })();
+    }
+    return aiPromise;
+  }
+  const AI_OFF = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed", "images_unavailable"];
+  function aiErrorText(e) {
+    const code = e && e.code;
+    if (AI_OFF.includes(code)) return "AI identification is turned off for this page, so set the type and color yourself.";
+    if (code === "rate_limited") return "AI is busy right now. Set these yourself, or try again in a minute.";
+    if (code === "session_expired") return "Sign in to Claude again to use AI identification.";
+    if (code === "image_rejected") return "AI couldn't read one of these photos. Set it yourself, or try a JPG or PNG.";
+    return "AI couldn't identify some photos. Set them yourself, or try again.";
+  }
+
+  function aiPrompt(n) {
+    return "These " + n + " photo(s) each show one clothing item or accessory from someone's closet, given in order. " +
+      "For each photo, identify the main item. Reply with ONLY a JSON array of " + n + " objects in the same order, each shaped:\n" +
+      '{"kind": one of ' + JSON.stringify(KINDS.map(k => k.id)) + " (" + KINDS.map(k => k.id + " = " + k.label).join("; ") + "),\n" +
+      ' "color": its main color, one of ' + JSON.stringify(Object.keys(COLORS)) + ' (use "pattern" for stripes, checks or prints),\n' +
+      ' "trim": a clearly different second color on the collar, trim or shoe sole, from the same list, or null,\n' +
+      ' "name": a short 2-5 word description, like "Cream cable-knit polo",\n' +
+      ' "weather": weather it suits, a non-empty subset of ["hot","mild","cold"],\n' +
+      ' "occasions": what it suits, a non-empty subset of ["casual","work","dressy","active"]}\n' +
+      "If a photo shows several items, describe the most prominent one.";
+  }
+  async function aiGuess(ai, blobs) {
+    const out = await ai.ask.json(aiPrompt(blobs.length), { images: blobs });
+    return Array.isArray(out) ? out : (out && Array.isArray(out.items) ? out.items : [out]);
+  }
+  // Copies a checked guess onto a draft or the form; anything unrecognized is left as it was.
+  function applyGuess(target, g) {
+    if (!g || typeof g !== "object") return false;
+    if (KIND[g.kind]) target.kind = g.kind;
+    if (COLORS[g.color]) target.color = g.color;
+    target.trim = COLORS[g.trim] && g.trim !== "pattern" && g.trim !== target.color ? g.trim : null;
+    if (typeof g.name === "string" && g.name.trim()) target.name = g.name.trim().slice(0, 60);
+    const pickFrom = (v, allowed) => Array.isArray(v) ? v.filter(x => allowed.includes(x)) : [];
+    const w = pickFrom(g.weather, ["hot", "mild", "cold"]); if (w.length) target.weather = w;
+    const o = pickFrom(g.occasions, ["casual", "work", "dressy", "active"]); if (o.length) target.occasions = o;
+    return true;
+  }
+
+  // ---------- Add from photos ----------
+  const drafts = [];
+  let aiNote = "";
+
+  async function addPhotos(files) {
+    const list = Array.from(files || []).filter(f => /^image\//.test(f.type) || !f.type);
+    if (!list.length) return;
+    const fresh = [];
+    for (const file of list) {
+      const d = Object.assign(blankForm(), { id: newId(), status: "reading", photo: null, blob: null, touched: false });
+      drafts.push(d); fresh.push(d);
+    }
+    aiNote = "Reading photos…";
+    renderDrafts();
+    await Promise.all(fresh.map(async (d, i) => {
+      try { Object.assign(d, await readPhoto(list[i])); d.status = "waiting"; }
+      catch (e) { d.status = "bad"; }
+    }));
+    const ok = fresh.filter(d => d.status === "waiting");
+    const bad = fresh.length - ok.length;
+    fresh.filter(d => d.status === "bad").forEach(d => drafts.splice(drafts.indexOf(d), 1));
+    if (bad) toast(bad + " file" + (bad > 1 ? "s" : "") + " couldn't be opened as a photo.");
+    await identify(ok);
+  }
+
+  async function identify(list) {
+    const ai = await getAI();
+    if (!ai) {
+      list.forEach(d => { d.status = "manual"; });
+      aiNote = IN_CLAUDE
+        ? "AI identification isn't available here, so set the type and color for each photo."
+        : "AI identification works inside the Claude link. Here, set the type and color for each photo.";
+      renderDrafts();
+      return;
+    }
+    list.forEach(d => { d.status = "identifying"; });
+    aiNote = "AI is identifying your clothes…";
+    renderDrafts();
+    let failed = null;
+    for (let i = 0; i < list.length; i += ai.perCall) {
+      const batch = list.slice(i, i + ai.perCall).filter(d => drafts.includes(d));
+      if (!batch.length) continue;
+      if (failed) { batch.forEach(d => { d.status = "failed"; }); continue; }
+      try {
+        const guesses = await aiGuess(ai, batch.map(d => d.blob));
+        batch.forEach((d, j) => {
+          if (d.touched) { d.status = "manual"; return; }
+          d.status = applyGuess(d, guesses[j]) ? "ai" : "failed";
+        });
+      } catch (e) {
+        failed = e;
+        batch.forEach(d => { d.status = "failed"; });
+        if (e && AI_OFF.includes(e.code)) aiPromise = Promise.resolve(null);
+      }
+      renderDrafts();
+    }
+    aiNote = failed ? aiErrorText(failed) : "Check what AI picked, fix anything that's off, then add them.";
+    renderDrafts();
+  }
+
+  const STATUS_TEXT = {
+    reading: "Reading…", waiting: "Waiting…", identifying: "Identifying…", ai: "AI filled this in",
+    manual: "Set the type and color", failed: "Set the type and color"
+  };
+  function draftCard(d) {
+    const busy = d.status === "reading" || d.status === "waiting" || d.status === "identifying";
+    const kindOpts = ["top", "layer", "bottom", "dress", "outer", "shoes", "belt", "accessory"].map(g =>
+      '<optgroup label="' + esc(SLOT_PLURAL[g]) + '">' + KINDS.filter(k => k.cat === g).map(k =>
+        '<option value="' + k.id + '"' + (k.id === d.kind ? " selected" : "") + ">" + esc(k.label) + "</option>").join("") + "</optgroup>").join("");
+    const colorOpts = Object.keys(COLORS).map(c => '<option value="' + c + '"' + (c === d.color ? " selected" : "") + ">" + esc(cap(colorName(c))) + "</option>").join("");
+    const toggles = (field, list) => list.map(([v, l]) =>
+      '<button type="button" data-dtoggle="' + field + '" data-value="' + v + '" aria-pressed="' + d[field].includes(v) + '">' + l + "</button>").join("");
+    return '<article class="draft' + (busy ? " busy" : "") + '" data-draft="' + d.id + '">' +
+      '<div class="status mono' + (d.status === "ai" ? " ai" : "") + '"><span>' + esc(STATUS_TEXT[d.status] || "") + "</span>" +
+      '<button type="button" class="x" data-action="draft-remove" aria-label="Remove this photo">×</button></div>' +
+      '<div class="thumb">' + (d.photo ? '<img src="' + esc(d.photo) + '" alt="">' : "") + "</div>" +
+      '<select data-dfield="kind" aria-label="What is it?"' + (busy ? " disabled" : "") + ">" + kindOpts + "</select>" +
+      '<select data-dfield="color" aria-label="Main color"' + (busy ? " disabled" : "") + ">" + colorOpts + "</select>" +
+      '<input type="text" data-dfield="name" maxlength="60" placeholder="Name (optional)" aria-label="Name" value="' + esc(d.name) + '"' + (busy ? " disabled" : "") + ">" +
+      '<div class="toggles" role="group" aria-label="Weather">' + toggles("weather", WEATHER) + "</div>" +
+      '<div class="toggles" role="group" aria-label="Occasion">' + toggles("occasions", OCCASIONS) + "</div>" +
+      "</article>";
+  }
+
+  function renderDrafts() {
+    const box = $("drafts");
+    $("drafts-box").hidden = !drafts.length;
+    $("ai-note").textContent = aiNote;
+    $("ai-retry").hidden = !drafts.some(d => d.status === "failed");
+    const busy = drafts.filter(d => ["reading", "waiting", "identifying"].includes(d.status)).length;
+    const add = $("drafts-add");
+    add.disabled = !drafts.length || busy > 0;
+    add.textContent = busy ? "Identifying " + busy + "…" : "Add " + (drafts.length === 1 ? "it" : "all " + drafts.length) + " to closet";
+    // Redraw cards, but leave alone the one the user is typing in.
+    const focused = document.activeElement && document.activeElement.closest && document.activeElement.closest(".draft");
+    const keepId = focused ? focused.dataset.draft : null;
+    const existing = new Map(Array.from(box.children).map(el => [el.dataset.draft, el]));
+    const html = drafts.map(d => d.id === keepId && existing.has(d.id) ? null : draftCard(d));
+    box.innerHTML = "";
+    drafts.forEach((d, i) => {
+      if (html[i] === null) { box.appendChild(existing.get(d.id)); return; }
+      box.insertAdjacentHTML("beforeend", html[i]);
+    });
+  }
+
+  const draftOf = el => { const card = el.closest(".draft"); return card ? drafts.find(d => d.id === card.dataset.draft) : null; };
+
+  async function addDrafts() {
+    const wasSamples = usingSamples();
+    const list = drafts.slice();
+    let n = 0;
+    for (const d of list) {
+      const name = d.name.trim() || cap(colorName(d.color)) + " " + KIND[d.kind].label.split(" /")[0].toLowerCase();
+      await store.putItem(normalize({
+        id: newId(), name, kind: d.kind, color: d.color, trim: d.trim,
+        weather: d.weather.length ? d.weather : ["hot", "mild", "cold"],
+        occasions: d.occasions.length ? d.occasions : ["casual"],
+        photo: d.photo, created: Date.now() + n
+      }));
+      drafts.splice(drafts.indexOf(d), 1);
+      n++;
+    }
+    aiNote = "";
+    if (wasSamples) { state.current = {}; state.locked.clear(); shuffle(); }
+    renderDrafts(); renderAll();
+    toast("Added " + n + " piece" + (n === 1 ? "" : "s") + " to your closet");
   }
 
   function resetForm() {
     state.editingId = null;
     state.form = blankForm();
     $("f-photo").value = "";
+    $("photo-hint").textContent = "Lay the piece flat on a white sheet or bed and shoot from above. It blends right into the outfit board.";
     fillForm();
   }
 
@@ -1034,6 +1267,16 @@
     }
     if (t.dataset.color) { state.form.color = t.dataset.color; fillForm(); return; }
     if (t.dataset.trim !== undefined) { state.form.trim = t.dataset.trim || null; fillForm(); return; }
+    if (t.dataset.dtoggle) {
+      const d = draftOf(t), f = t.dataset.dtoggle, v = t.dataset.value;
+      if (!d) return;
+      const on = d[f].includes(v);
+      if (on && d[f].length === 1) { toast("Keep at least one selected."); return; }
+      d[f] = on ? d[f].filter(x => x !== v) : d[f].concat(v);
+      d.touched = true;
+      t.setAttribute("aria-pressed", String(!on));
+      return;
+    }
 
     const a = t.dataset.action;
     if (a === "shuffle") { shuffle(); renderOutfit(); }
@@ -1089,6 +1332,15 @@
     else if (a === "wx-change") { wx.editing = true; wx.msg = ""; renderWeather(); $("wx-city").focus(); }
     else if (a === "wx-cancel") { wx.editing = false; wx.msg = ""; renderWeather(); }
     else if (a === "wx-unit") { wx.unit = wx.unit === "F" ? "C" : "F"; ls.set("cs-unit", wx.unit); renderWeather(); }
+    else if (a === "draft-remove") {
+      const d = draftOf(t);
+      if (d) drafts.splice(drafts.indexOf(d), 1);
+      if (!drafts.length) aiNote = "";
+      renderDrafts();
+    }
+    else if (a === "drafts-discard") { drafts.length = 0; aiNote = ""; renderDrafts(); }
+    else if (a === "drafts-add") addDrafts();
+    else if (a === "ai-retry") identify(drafts.filter(d => d.status === "failed"));
   });
 
   $("wx-form").addEventListener("submit", e => {
@@ -1118,8 +1370,43 @@
   $("f-photo").addEventListener("change", async e => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    try { state.form.photo = await shrinkPhoto(file); fillForm(); }
-    catch (err) { toast("That file couldn't be read as a photo. Try a JPG or PNG."); }
+    let read;
+    try { read = await readPhoto(file); }
+    catch (err) { toast("That file couldn't be read as a photo. Try a JPG or PNG."); return; }
+    state.form.photo = read.photo; fillForm();
+    const ai = await getAI();
+    if (!ai) return;
+    const hint = $("photo-hint");
+    hint.textContent = "AI is identifying this piece…";
+    try {
+      const [g] = await aiGuess(ai, [read.blob]);
+      if (state.form.photo !== read.photo) return; // the photo changed meanwhile
+      applyGuess(state.form, g); fillForm();
+      hint.textContent = "AI filled this in. Check it before adding.";
+    } catch (err) {
+      if (err && AI_OFF.includes(err.code)) aiPromise = Promise.resolve(null);
+      hint.textContent = aiErrorText(err);
+    }
+  });
+
+  // Add from photos: pick many at once, or drop them on the box.
+  $("f-photos").addEventListener("change", e => { addPhotos(e.target.files); e.target.value = ""; });
+  const bulk = $("bulk");
+  bulk.addEventListener("dragover", e => { e.preventDefault(); bulk.classList.add("over"); });
+  bulk.addEventListener("dragleave", e => { if (!bulk.contains(e.relatedTarget)) bulk.classList.remove("over"); });
+  bulk.addEventListener("drop", e => {
+    e.preventDefault(); bulk.classList.remove("over");
+    if (e.dataTransfer && e.dataTransfer.files.length) addPhotos(e.dataTransfer.files);
+  });
+  $("drafts").addEventListener("change", e => {
+    const d = draftOf(e.target), f = e.target.dataset.dfield;
+    if (!d || !f) return;
+    d[f] = e.target.value; d.touched = true;
+    if (f === "color" && d.trim === d.color) d.trim = null;
+  });
+  $("drafts").addEventListener("input", e => {
+    const d = draftOf(e.target);
+    if (d && e.target.dataset.dfield === "name") { d.name = e.target.value; d.touched = true; }
   });
   $("photo-clear").addEventListener("click", () => { state.form.photo = null; $("f-photo").value = ""; fillForm(); });
   $("form-cancel").addEventListener("click", resetForm);
@@ -1155,6 +1442,9 @@
   shuffle();
   renderAll();
   connectCloud();
+  getAI().then(ai => {
+    if (ai) $("bulk-lede").textContent = "Pick as many photos as you like. AI fills in what each piece is and its color, then you check them before they're added.";
+  });
   const savedPlace = ls.get("cs-place");
   if (savedPlace && typeof savedPlace.lat === "number") loadWeather(savedPlace);
 })();

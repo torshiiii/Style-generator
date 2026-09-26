@@ -7,6 +7,13 @@ An outfit generator that only uses clothes you actually own.
 1. Download `index.html` (on GitHub: click the file, then the **Download raw file** button).
 2. Double-click it. It opens in your web browser. That's the whole app.
 
+### Adding clothes from photos
+In **My closet**, tap **Choose photos** and select as many photos as you like at once (or drag
+them onto the box on a computer). Inside the Claude link, AI looks at each photo and fills in
+what it is (top, pants, jacket, shoes…), its color and a name. Check each one, fix anything
+that's off, then tap **Add all to closet**. When you open `index.html` directly, AI isn't
+available, so you pick the type and color yourself.
+
 ### Getting started
 1. Go to **My closet** and add your clothes. For each piece pick what it is
    (top, bottoms, shoes…), its main color, and what weather and occasions it's good for.
