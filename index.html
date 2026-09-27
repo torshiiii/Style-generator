@@ -233,6 +233,7 @@
   .draft .status { color: var(--muted); display: flex; justify-content: space-between; gap: 6px; align-items: center; font-size: 9.5px; }
   .draft .detected { font-family: var(--display); font-size: 19px; font-weight: 600; line-height: 1.15; }
   .draft .detected em { font-weight: 500; color: var(--muted); }
+  .draft .seen { font-size: 14px; font-style: italic; color: var(--muted); line-height: 1.3; }
   .draft details summary { list-style: none; font-family: var(--caps); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
   .draft details summary::-webkit-details-marker { display: none; }
   .draft details[open] summary { margin-bottom: 6px; }
@@ -1080,17 +1081,18 @@
 
   // ---------- AI identification (Claude, available inside the Claude link) ----------
   let aiPromise = null;
+  let aiWhyOff = "";
   function getAI() {
     if (!aiPromise) {
       aiPromise = (async () => {
-        if (!IN_CLAUDE) return null;
+        if (!IN_CLAUDE) { aiWhyOff = "AI identification works inside the Claude link. Here, set the type and color for each photo."; return null; }
         try {
           const s = await window.claude.use("sample");
-          if (!s) return null;
+          if (!s) { aiWhyOff = "AI isn't available in this view of the page, so set the type and color for each photo."; return null; }
           const caps = await s.limits().catch(() => null);
-          if (!caps || !caps.images) return null;
-          return { ask: s, perCall: Math.max(1, Math.min(caps.images.maxCount || 1, 4)) };
-        } catch (e) { return null; }
+          if (!caps || !caps.images) { aiWhyOff = "This Claude app can't send photos to AI, so set the type and color for each photo. Try the Claude website on a computer."; return null; }
+          return { ask: s };
+        } catch (e) { aiWhyOff = "AI isn't available right now, so set the type and color for each photo."; return null; }
       })();
     }
     return aiPromise;
@@ -1098,38 +1100,116 @@
   const AI_OFF = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed", "images_unavailable"];
   function aiErrorText(e) {
     const code = e && e.code;
+    if (code === "not_granted") return "AI wasn't allowed for this page. To use it, reload and allow Claude when asked.";
     if (AI_OFF.includes(code)) return "AI identification is turned off for this page, so set the type and color yourself.";
-    if (code === "rate_limited") return "AI is busy right now. Set these yourself, or try again in a minute.";
+    if (code === "rate_limited") return "AI is busy right now. Set these yourself, or tap Try AI again in a minute.";
     if (code === "session_expired") return "Sign in to Claude again to use AI identification.";
-    if (code === "image_rejected") return "AI couldn't read one of these photos. Set it yourself, or try a JPG or PNG.";
-    return "AI couldn't identify some photos. Set them yourself, or try again.";
+    if (code === "image_rejected") return "AI couldn't open one of these photos. Set it yourself, or try a JPG or PNG.";
+    return "AI couldn't identify some photos. Set them yourself, or tap Try AI again.";
   }
 
-  function aiPrompt(n) {
-    return "These " + n + " photo(s) each show one clothing item or accessory from someone's closet, given in order. " +
-      "For each photo, identify the main item. Reply with ONLY a JSON array of " + n + " objects in the same order, each shaped:\n" +
-      '{"kind": one of ' + JSON.stringify(KINDS.map(k => k.id)) + " (" + KINDS.map(k => k.id + " = " + k.label).join("; ") + "),\n" +
-      ' "color": its main color, one of ' + JSON.stringify(Object.keys(COLORS)) + ' (use "pattern" for stripes, checks or prints),\n' +
-      ' "trim": a clearly different second color on the collar, trim or shoe sole, from the same list, or null,\n' +
-      ' "name": a short 2-5 word description, like "Cream cable-knit polo",\n' +
-      ' "weather": weather it suits, a non-empty subset of ["hot","mild","cold"],\n' +
-      ' "occasions": what it suits, a non-empty subset of ["casual","work","dressy","active"]}\n' +
-      "If a photo shows several items, describe the most prominent one.";
+  // Ask in plain words, then map the answer onto the app's lists ourselves.
+  // That's far more reliable than asking for exact internal codes.
+  const AI_PROMPT =
+    "This photo shows a piece of clothing or an accessory from someone's closet. Identify the main item.\n" +
+    "Reply with ONLY one JSON object, no other text:\n" +
+    '{"type": "what it is, in 1-3 plain words, e.g. shorts, chinos, jeans, polo, t-shirt, button-up shirt, sweater, cardigan, hoodie, jacket, blazer, coat, sneakers, loafers, boots, belt, watch, bag, cap, dress, skirt",\n' +
+    ' "description": "a short 2-5 word name, e.g. Navy chino shorts",\n' +
+    ' "color": "its main color in plain words, e.g. navy, light blue, cream, khaki, olive, charcoal",\n' +
+    ' "second_color": "color of a clearly different collar, trim or shoe sole, or null",\n' +
+    ' "weather": ["the weather it suits: any of hot, mild, cold"],\n' +
+    ' "occasions": ["what it suits: any of casual, work, dressy, active"]}\n' +
+    "Tips: shorts end above the knee; pants, chinos and trousers reach the ankle; jeans are denim pants. " +
+    "If the photo shows several items, describe the most prominent one.";
+
+  const TYPE_WORDS = [
+    [/\bshorts\b|\bbermudas?\b/, "shorts"], [/skirt/, "skirt"],
+    [/loafer|dress shoe|oxford shoe|derby|brogue|boot|moccasin|sandal|heel|mule|slipper/, "dressshoes"],
+    [/sneaker|trainer|running shoe|tennis shoe|\bshoes?\b/, "sneakers"],
+    [/\bbelt/, "belt"], [/watch|bracelet/, "watch"], [/\bbag\b|tote|backpack|satchel|briefcase/, "bag"], [/\bhat\b|\bcap\b|beanie|fedora/, "hat"],
+    [/jeans|denim pants|denim trousers/, "jeans"], [/trouser|\bpants\b|chino|slacks|joggers/, "pants"],
+    [/jumpsuit|romper|\bdress\b/, "dress"],
+    [/overcoat|topcoat|trench|parka|peacoat|\bcoat\b/, "coat"],
+    [/jacket|blazer|bomber|gilet|anorak|windbreaker|overshirt|shacket/, "jacket"],
+    [/hoodie|sweatshirt/, "hoodie"], [/polo/, "polo"],
+    [/t-?shirt|\btee\b|tank|henley/, "tee"],
+    [/sweater|jumper|cardigan|pullover|crewneck|v-neck|knitwear/, "sweater"],
+    [/shirt|blouse|oxford|button/, "shirt"], [/\btop\b/, "tee"]
+  ];
+  const COLOR_WORDS = [
+    [/stripe|check|plaid|print|floral|houndstooth|paisley|camo|pattern|gingham|tartan/, "pattern"],
+    [/light blue|sky|baby blue|powder|pale blue|ice blue/, "lightblue"],
+    [/navy|midnight/, "navy"], [/denim|indigo|chambray/, "denim"],
+    [/olive|khaki green|army|military green/, "olive"],
+    [/charcoal|graphite|dark gr[ae]y|slate/, "charcoal"], [/gr[ae]y|silver|heather/, "gray"],
+    [/cream|ivory|off-?white|ecru|oatmeal|bone|eggshell|natural/, "cream"],
+    [/beige|khaki|sand|taupe|stone|fawn/, "beige"],
+    [/\btan\b|camel|cognac|caramel|whiske?y|light brown|saddle/, "tan"],
+    [/brown|chocolate|espresso|mocha|coffee|chestnut/, "brown"],
+    [/burgundy|maroon|wine|oxblood|bordeaux/, "burgundy"], [/\bred\b|crimson|scarlet/, "red"],
+    [/pink|rose|blush|salmon/, "pink"], [/orange|rust|terracotta|burnt/, "orange"], [/yellow|mustard|gold/, "yellow"],
+    [/green|forest|sage|mint|emerald|hunter/, "green"], [/blue|cobalt|royal|teal/, "blue"],
+    [/purple|lavender|lilac|violet|plum/, "purple"], [/white/, "white"], [/black|jet/, "black"]
+  ];
+  const DEFAULT_WEATHER = { shorts: ["hot"], coat: ["cold"], sweater: ["mild", "cold"], hoodie: ["mild", "cold"], jacket: ["mild", "cold"] };
+  const lower = v => (typeof v === "string" ? v : "").toLowerCase();
+  function matchWord(table, ...texts) {
+    for (const t of texts) {
+      const s = lower(t);
+      if (!s) continue;
+      if (table === COLOR_WORDS && COLORS[s.replace(/\s+/g, "")]) return s.replace(/\s+/g, "");
+      for (const [re, id] of table) if (re.test(s)) return id;
+    }
+    return null;
   }
-  async function aiGuess(ai, blobs) {
-    const out = await ai.ask.json(aiPrompt(blobs.length), { images: blobs });
-    return Array.isArray(out) ? out : (out && Array.isArray(out.items) ? out.items : [out]);
+  // Pull the fields out of whatever shape came back (object, array, nested, different key names).
+  function unwrap(out) {
+    if (Array.isArray(out)) out = out[0];
+    if (out && typeof out === "object" && !("type" in out) && !("kind" in out)) {
+      const inner = Object.values(out).find(v => v && typeof v === "object" && !Array.isArray(v));
+      if (inner) out = inner;
+    }
+    return out && typeof out === "object" ? out : null;
   }
-  // Copies a checked guess onto a draft or the form; anything unrecognized is left as it was.
+  async function aiIdentify(ai, blob) {
+    let out;
+    try { out = await ai.ask.json(AI_PROMPT, { images: [blob], modelTier: "default" }); }
+    catch (e) {
+      // A reply with a stray sentence around the JSON still holds what we need.
+      const m = e && e.code === "invalid_json" && typeof e.text === "string" && e.text.match(/\{[\s\S]*\}/);
+      if (!m) throw e;
+      try { out = JSON.parse(m[0]); } catch (x) { throw e; }
+    }
+    const g = unwrap(out);
+    if (!g) return null;
+    const kind = matchWord(TYPE_WORDS, g.type, g.kind, g.category, g.item, g.description, g.name);
+    if (!kind) return { seen: g.description || g.type || "" };
+    const color = matchWord(COLOR_WORDS, g.color, g.main_color, g.mainColor, g.colour, g.description, g.name);
+    let trim = matchWord(COLOR_WORDS, g.second_color, g.secondColor, g.trim);
+    if (trim === "pattern" || trim === color) trim = null;
+    const list = (v, allowed) => (Array.isArray(v) ? v : typeof v === "string" ? v.split(/[,/ ]+/) : []).map(lower).filter(x => allowed.includes(x));
+    const weather = list(g.weather, ["hot", "mild", "cold"]);
+    const occasions = list(g.occasions || g.occasion, ["casual", "work", "dressy", "active"]);
+    const name = String(g.description || g.name || "").trim().slice(0, 60);
+    return {
+      kind, color: color || null, trim,
+      name: name ? cap(name) : "",
+      weather: weather.length ? weather : (DEFAULT_WEATHER[kind] || ["hot", "mild", "cold"]),
+      occasions: occasions.length ? occasions : ["casual"],
+      seen: name || String(g.type || "")
+    };
+  }
+  // Copies a guess onto a draft or the form. Returns false when AI couldn't say what the item is.
   function applyGuess(target, g) {
-    if (!g || typeof g !== "object") return false;
-    if (KIND[g.kind]) target.kind = g.kind;
-    if (COLORS[g.color]) target.color = g.color;
-    target.trim = COLORS[g.trim] && g.trim !== "pattern" && g.trim !== target.color ? g.trim : null;
-    if (typeof g.name === "string" && g.name.trim()) target.name = g.name.trim().slice(0, 60);
-    const pickFrom = (v, allowed) => Array.isArray(v) ? v.filter(x => allowed.includes(x)) : [];
-    const w = pickFrom(g.weather, ["hot", "mild", "cold"]); if (w.length) target.weather = w;
-    const o = pickFrom(g.occasions, ["casual", "work", "dressy", "active"]); if (o.length) target.occasions = o;
+    if (!g) return false;
+    target.seen = g.seen || "";
+    if (!g.kind) return false;
+    target.kind = g.kind;
+    if (g.color) target.color = g.color;
+    target.trim = g.trim && g.trim !== target.color ? g.trim : null;
+    if (g.name) target.name = g.name;
+    target.weather = g.weather.slice();
+    target.occasions = g.occasions.slice();
     return true;
   }
 
@@ -1142,7 +1222,7 @@
     if (!list.length) return;
     const fresh = [];
     for (const file of list) {
-      const d = Object.assign(blankForm(), { id: newId(), status: "reading", photo: null, blob: null, touched: false });
+      const d = Object.assign(blankForm(), { id: newId(), status: "reading", photo: null, blob: null, touched: false, seen: "" });
       drafts.push(d); fresh.push(d);
     }
     aiNote = "Reading photos…";
@@ -1162,40 +1242,45 @@
     const ai = await getAI();
     if (!ai) {
       list.forEach(d => { d.status = "manual"; });
-      aiNote = IN_CLAUDE
-        ? "AI identification isn't available here, so set the type and color for each photo."
-        : "AI identification works inside the Claude link. Here, set the type and color for each photo.";
+      aiNote = aiWhyOff;
       renderDrafts();
       return;
     }
-    list.forEach(d => { d.status = "identifying"; });
-    aiNote = "AI is identifying your clothes…";
+    list.forEach(d => { d.status = "waiting"; });
+    aiNote = "Identifying your clothes…";
     renderDrafts();
-    let failed = null;
-    for (let i = 0; i < list.length; i += ai.perCall) {
-      const batch = list.slice(i, i + ai.perCall).filter(d => drafts.includes(d));
-      if (!batch.length) continue;
-      if (failed) { batch.forEach(d => { d.status = "failed"; }); continue; }
-      try {
-        const guesses = await aiGuess(ai, batch.map(d => d.blob));
-        batch.forEach((d, j) => {
-          if (d.touched) { d.status = "manual"; return; }
-          d.status = applyGuess(d, guesses[j]) ? "ai" : "failed";
-        });
-      } catch (e) {
-        failed = e;
-        batch.forEach(d => { d.status = "failed"; });
-        if (e && AI_OFF.includes(e.code)) aiPromise = Promise.resolve(null);
+    let stop = null, unsure = 0;
+    // One photo per request, two at a time: answers can't get mixed up between photos.
+    const queue = list.slice();
+    async function worker() {
+      while (queue.length) {
+        const d = queue.shift();
+        if (!drafts.includes(d)) continue;
+        if (stop) { d.status = "failed"; continue; }
+        d.status = "identifying"; renderDrafts();
+        try {
+          const g = await aiIdentify(ai, d.blob);
+          if (d.touched) d.status = "manual";
+          else if (applyGuess(d, g)) d.status = "ai";
+          else { d.status = "failed"; unsure++; }
+        } catch (e) {
+          if (!stop) stop = e;
+          d.status = "failed";
+          if (e && AI_OFF.includes(e.code)) { aiPromise = Promise.resolve(null); aiWhyOff = aiErrorText(e); }
+        }
+        renderDrafts();
       }
-      renderDrafts();
     }
-    aiNote = failed ? aiErrorText(failed) : "Everything is identified. Tap Change on any piece that's wrong.";
+    await Promise.all([worker(), worker()]);
+    aiNote = stop ? aiErrorText(stop)
+      : unsure ? "AI couldn't tell what " + (unsure === 1 ? "one photo shows" : unsure + " photos show") + ". Set those yourself; the rest are done."
+      : "Everything is identified. Tap Change on any piece that's wrong.";
     renderDrafts();
   }
 
   const STATUS_TEXT = {
     reading: "Reading photo…", waiting: "Waiting…", identifying: "Identifying…", ai: "Identified",
-    manual: "Set the details", failed: "Couldn't identify"
+    manual: "Set the details", failed: "Couldn't tell"
   };
   function draftCard(d) {
     const busy = d.status === "reading" || d.status === "waiting" || d.status === "identifying";
@@ -1207,12 +1292,14 @@
     const toggles = (field, list) => list.map(([v, l]) =>
       '<button type="button" data-dtoggle="' + field + '" data-value="' + v + '" aria-pressed="' + d[field].includes(v) + '">' + l + "</button>").join("");
     const detected = busy ? '<div class="detected"><em>Looking at it…</em></div>'
+      : needsHand ? '<div class="detected"><em>Pick the type below</em></div>'
       : '<div class="detected">' + esc(KIND[d.kind].label.split(" /")[0]) + ' <em>in ' + esc(colorName(d.color)) + "</em></div>";
+    const seen = d.seen ? '<div class="seen">AI saw: ' + esc(d.seen) + "</div>" : "";
     return '<article class="draft' + (busy ? " busy" : "") + '" data-draft="' + d.id + '">' +
       '<div class="status mono"><span>' + esc(STATUS_TEXT[d.status] || "") + "</span>" +
       '<button type="button" class="x" data-action="draft-remove" aria-label="Remove this photo">×</button></div>' +
       '<div class="thumb">' + (d.photo ? '<img src="' + esc(d.photo) + '" alt="">' : "") + "</div>" +
-      detected +
+      detected + seen +
       (busy ? "" :
         '<details' + (needsHand ? " open" : "") + "><summary>" + (needsHand ? "Details" : "Change") + "</summary><div>" +
         '<select data-dfield="kind" aria-label="Type">' + kindOpts + "</select>" +
@@ -1401,12 +1488,12 @@
     const hint = $("photo-hint");
     hint.textContent = "AI is identifying this piece…";
     try {
-      const [g] = await aiGuess(ai, [read.blob]);
+      const g = await aiIdentify(ai, read.blob);
       if (state.form.photo !== read.photo) return; // the photo changed meanwhile
-      applyGuess(state.form, g); fillForm();
-      hint.textContent = "AI filled this in. Check it before adding.";
+      if (applyGuess(state.form, g)) { fillForm(); hint.textContent = "Identified as " + (g.seen || KIND[g.kind].label) + ". Change anything that's off."; }
+      else hint.textContent = "AI couldn't tell what this is" + (g && g.seen ? " (it saw: " + g.seen + ")" : "") + ". Set the type below.";
     } catch (err) {
-      if (err && AI_OFF.includes(err.code)) aiPromise = Promise.resolve(null);
+      if (err && AI_OFF.includes(err.code)) { aiPromise = Promise.resolve(null); aiWhyOff = aiErrorText(err); }
       hint.textContent = aiErrorText(err);
     }
   });
