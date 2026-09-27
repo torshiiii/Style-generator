@@ -9,9 +9,10 @@ An outfit generator that only uses clothes you actually own.
 
 ### Adding clothes from photos
 In **My closet**, tap **Choose photos** and select as many photos as you like at once (or drag
-them onto the box on a computer). Inside the Claude link, AI looks at each photo and fills in
-what it is (top, pants, jacket, shoes…), its color and a name. Check each one, fix anything
-that's off, then tap **Add all to closet**. When you open `index.html` directly, AI isn't
+them onto the box on a computer). Inside the Claude link, each photo is identified for you:
+what it is (shirt, trousers, jacket, shoes…), its color and a name. You never have to pick the
+type yourself, but you can tap **Change** on any piece if it got something wrong. Then tap
+**Add all to closet**. When you open `index.html` directly, AI isn't
 available, so you pick the type and color yourself.
 
 ### Getting started
