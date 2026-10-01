@@ -1,0 +1,3 @@
+# DGD Risk and Insurance Services website (Netlify)
+[build]
+  publish = "."
